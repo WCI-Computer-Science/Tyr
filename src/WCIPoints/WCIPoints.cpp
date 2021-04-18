@@ -34,7 +34,6 @@ CWCIPointsApp::CWCIPointsApp() noexcept
 	m_bHiColorIcons = TRUE;
 
 
-	m_nAppLook = 0;
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_ALL_ASPECTS;
 #ifdef _MANAGED
@@ -86,7 +85,7 @@ BOOL CWCIPointsApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	SetRegistryKey(_T("WCI Computer Science"));
 	LoadStdProfileSettings(4);  // Load standard INI file options (including MRU)
 
 
