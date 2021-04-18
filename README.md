@@ -1,5 +1,5 @@
-# WCI-Points
-A Windows MFC application for handing out awards at WCI. Students get points based on activities and academics, and awards are assigned based on those points.
+# Tyr
+A Windows MFC application for handing out awards at WCI. Successor to the _Heimdall_ program. Students get points based on activities and academics, and awards are assigned based on those points.
 
 This app is meant to be run on x86 Windows 7. It requires MySQL server 5.7 and MySQL Connector/C++ 1.1. To set this up, follow these instructions:
 1. Download the MySQL 5.7.33 installer. As of right now, it is available here: https://dev.mysql.com/downloads/windows/installer/5.7.html
