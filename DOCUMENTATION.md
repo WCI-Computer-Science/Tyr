@@ -87,17 +87,20 @@ Note that the Red W award is satisfied if EITHER constraint set 1 OR 2 is satisf
 
 The Academic White W award has three constraint sets:
 1. <= 4 years of high school AND 3 or more years of High Honours
-2. > 4 years of high school AND 4 or more years of High Honours
-3. > 4 years of high school AND 3 consecutive years of High Honours
+2. \> 4 years of high school AND 4 or more years of High Honours
+3. \> 4 years of high school AND 3 consecutive years of High Honours
+
 Note that to satisfy a single constraint set, ALL constraints in ONE SET must be satisfied. Note also that High Honours is a specific Academic action.
 
 The Activity Blue W award has two constraint sets:
 1. <= 4 years of high school AND 8 Activity points with at most 3 points per year
-2. > 4 years of high school AND 10 Activity points with at most 3 points per year
+2. \> 4 years of high school AND 10 Activity points with at most 3 points per year
+
 Note that a cap is placed on the number of points each year.
 
 The Award of Honour has one single constraint set:
 1. Red W AND White W AND Blue W
+
 Note that it treats the Red W, White W,and Blue W as constraints.
 
 There are two issues to deal with here: complex constraints with many requirements and treating awards as constraints.
@@ -105,7 +108,7 @@ There are two issues to deal with here: complex constraints with many requiremen
 ### Awards as Constraints
 In order for the app to be able to check to see if the Award of Honour is satisfied, the awards it's based on must be decomposed into constraints. We can use the constraints of the Red W, White W, and Blue W.
 However, since only one of their constraint sets need to be satisfied for the entire award to be satisfied, we'd need to check it against every single combination of their constraint sets.
-That means the Award of Honour would need 2*3*2=12 constraint sets. If we were to add more awards with their own constraint sets, the time and space complexity would grow exponentially.
+That means the Award of Honour would need 2\*3*2=12 constraint sets. If we were to add more awards with their own constraint sets, the time and space complexity would grow exponentially.
 
 Instead, we can treat awards and constraints as the same thing (an award essentially inherits from a constraint). This means to check the Award of Honour, we evaluate each W award seperately,
 for 2+3+2=7 constraints checked. This reduces complexity to linear, and also allows short circuiting if any required constraint evaluates to false.
