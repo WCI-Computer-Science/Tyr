@@ -83,6 +83,7 @@ The constraint sets of the base awards are given below, but the application shou
 The Athletic Red W award has two constraint sets:
 1. 12 Athletic points
 2. 4 years of the same Athletic action
+
 Note that the Red W award is satisfied if EITHER constraint set 1 OR 2 is satisfied.
 
 The Academic White W award has three constraint sets:
