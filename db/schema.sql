@@ -5,11 +5,12 @@ CREATE TABLE student (
 	last_name VARCHAR(64) NOT NULL,
 	first_name VARCHAR(64) NOT NULL,
 	pref_name VARCHAR(64), /* Preferred name (if applicable) */
-	start_year YEAR NOT NULL, /* Start of highschool career. If they start in 2019-2020 school year, put 2019. */
-	grad_year YEAR NOT NULL, /* End of highschool career. If they graduate in 2022-2023 school year, put 2023. */
+	start_year YEAR NOT NULL, /* Start of highschool career. e.g. if they start in 2019-2020 school year, put 2019. */
+	grad_year YEAR NOT NULL, /* End of highschool career. e.g. if they graduate in 2022-2023 school year, put 2023. */
 
 	PRIMARY KEY (stdt_id)
 );
+
 
 
 /* Athletics ("Red W") */
@@ -40,12 +41,15 @@ CREATE TABLE activity (
 );
 
 
+
 /* Student taking athletics for a specific year */
 CREATE TABLE student_athletic (
 	stdt_id MEDIUMINT UNSIGNED NOT NULL,
 	athl_id SMALLINT UNSIGNED NOT NULL,
 	start_year YEAR NOT NULL, /* Start year of current school year. If the year is 2020-2021, put 2020 here */
 
+	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
+	FOREIGN KEY (athl_id) REFERENCES athletic(athl_id),
 	UNIQUE (stdt_id, athl_id, start_year)
 );
 
@@ -54,7 +58,9 @@ CREATE TABLE student_academic (
 	stdt_id MEDIUMINT UNSIGNED NOT NULL,
 	acdm_id SMALLINT UNSIGNED NOT NULL,
 	start_year YEAR NOT NULL, /* Start year of current school year. If the year is 2020-2021, put 2020 here */
-
+	
+	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
+	FOREIGN KEY (acdm_id) REFERENCES academic(acdm_id),
 	UNIQUE (stdt_id, acdm_id, start_year)
 );
 
@@ -64,5 +70,10 @@ CREATE TABLE student_activity (
 	actv_id SMALLINT UNSIGNED NOT NULL,
 	start_year YEAR NOT NULL, /* Start year of current school year. If the year is 2020-2021, put 2020 here */
 
+	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
+	FOREIGN KEY (actv_id) REFERENCES activity(actv_id),
 	UNIQUE (stdt_id, actv_id, start_year)
 );
+
+
+
