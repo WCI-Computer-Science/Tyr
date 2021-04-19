@@ -1,3 +1,24 @@
+/* For detailed explantion of schematic, consult DOCUMENTATION.md */
+
+DROP TABLE IF EXISTS student;
+DROP TABLE IF EXISTS athletic;
+DROP TABLE IF EXISTS academic;
+DROP TABLE IF EXISTS activity;
+DROP TABLE IF EXISTS student_athletic;
+DROP TABLE IF EXISTS student_academic;
+DROP TABLE IF EXISTS student_activity;
+DROP TABLE IF EXISTS cnst;
+DROP TABLE IF EXISTS basic_cnst;
+DROP TABLE IF EXISTS compound_cnst;
+
+
+
+/*
+ * Tables
+ */
+
+
+
 /* Students */
 CREATE TABLE student (
 	stdt_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -17,7 +38,7 @@ CREATE TABLE student (
 CREATE TABLE athletic ( 
 	athl_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	name VARCHAR(64) NOT NULL,
-	points TINYINT UNSIGNED NOT NULL, /* Point value of athletic */
+	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of athletic */
 
 	PRIMARY KEY (athl_id)
 );
@@ -26,7 +47,7 @@ CREATE TABLE athletic (
 CREATE TABLE academic (
 	acdm_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	name VARCHAR(64) NOT NULL,
-	points TINYINT UNSIGNED NOT NULL, /* Point value of academic */
+	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of academic */
 
 	PRIMARY KEY (acdm_id)
 );
@@ -35,7 +56,7 @@ CREATE TABLE academic (
 CREATE TABLE activity (
 	actv_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	name VARCHAR(64) NOT NULL,
-	points TINYINT UNSIGNED NOT NULL, /* Point value of activity */
+	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of activity */
 
 	PRIMARY KEY (actv_id)
 );
@@ -77,3 +98,68 @@ CREATE TABLE student_activity (
 
 
 
+/* Constraint information */
+CREATE TABLE cnst (
+	cnst_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	depth SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+	name VARCHAR(64),
+	description VARCHAR(64) NOT NULL,
+	type TINYINT(1) NOT NULL,
+	is_award BOOLEAN NOT NULL,
+
+	PRIMARY KEY (cnst_id),
+	CHECK (type IN (0, 1, 2, 3, 4, 5)),
+	CHECK (is_award=FALSE OR name IS NOT NULL)
+);
+
+/* Basic constraint parameter info */
+CREATE TABLE basic_cnst (
+	cnst_id SMALLINT UNSIGNED NOT NULL,
+	actn_id SMALLINT UNSIGNED,
+	actn_type TINYINT(1),
+	mx TINYINT UNSIGNED, /* Max points */
+	x TINYINT UNSIGNED NOT NULL, /* Interval start */
+	y TINYINT UNSIGNED NOT NULL, /* Interval end */
+
+	PRIMARY KEY (cnst_id),
+	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id),
+	CHECK (actn_type IN (0, 1, 2))
+);
+
+/* Compound constraint edge list */
+CREATE TABLE compound_cnst (
+	sub_cnst SMALLINT UNSIGNED NOT NULL,
+	super_cnst SMALLINT UNSIGNED NOT NULL,
+
+	FOREIGN KEY (sub_cnst) REFERENCES cnst(cnst_id),
+	FOREIGN KEY (super_cnst) REFERENCES cnst(cnst_id),
+	UNIQUE (sub_cnst, super_cnst)
+);
+
+
+
+/*
+ * Procedures
+ */
+
+
+
+/* Calculation for basic constraint type 1 (summing action points) */
+CREATE PROCEDURE actn_sum (
+	IN student MEDIUMINT UNSIGNED,
+	IN actn_type TINYINT(1),
+	IN mx TINYINT UNSIGNED,
+	OUT result TINYINT
+)
+BEGIN
+	SELECT COALESCE(SUM(points), 0) INTO result FROM (
+		SELECT GREATEST(points, COALESCE(mx, 0)) AS points
+		FROM (
+			CASE actn_type
+				WHEN 0 THEN athletic,
+				WHEN 1 THEN academic,
+				WHEN 2 THEN activity
+		)
+		WHERE stdt_id=student
+	)
+END;
