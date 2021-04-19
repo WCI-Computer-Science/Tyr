@@ -132,16 +132,16 @@ There is also one more constraint we need to define: basic conditionals. A basic
 There are 4 kinds of basic conditional that will be used in this application:
 1. The sum of action points, with at most _m_ points per year, should be in an interval _x_ to _y_
 2. The difference between student grad year and start year should be in an interval _x_ to _y_
-3.
-	a. The frequency of a specific action should be in an interval _x_ to _y_
-	b. The frequency of _any_ specific action in a specific action type should be in an interval _x_ to _y_
-	c. The frequency of _all_ actions in a specific action type should be in an interval _x_ to _y_
-4. 
-	a. The maximum consecutive years of a specific action should be in an interval _x_ to _y_
-	b. The maximum consecutive years of _any_ specific action in a specific action type should be in an interval _x_ to _y_
-	c. The maximum consecutive years of _all_ actions in a specific action type should be in an interval _x_ to _y_
+3.  
+	a. The frequency of a specific action should be in an interval _x_ to _y_  
+	b. The frequency of _any_ specific action in a specific action type should be in an interval _x_ to _y_  
+	c. The frequency of _all_ actions in a specific action type should be in an interval _x_ to _y_  
+4.  
+	a. The maximum consecutive years of a specific action should be in an interval _x_ to _y_  
+	b. The maximum consecutive years of _any_ specific action in a specific action type should be in an interval _x_ to _y_  
+	c. The maximum consecutive years of _all_ actions in a specific action type should be in an interval _x_ to _y_  
 
-These calculations are facilitated as SQL procedures. Note that there can be multiple specific conditions that fall under one kind, depending on what information is provided.
+These calculations are facilitated by SQL procedures. Note that there can be multiple specific conditions that fall under one kind, depending on what information is provided.
 See the SQL schema file for specific implementation.
 
 ### Schematic
@@ -153,7 +153,7 @@ In the database, there is a base constraint table with information universal to 
 A constraint has an identifier, a depth, a name, a description, a type, and a field marking it as an award or not.
 
 The depth field stores something similar to depth in a tree. If the constraint is basic, the depth is 0.
-If it's compound, the depth is 1 + the maximum depth of all its sub-constraints. A super-constraint will always have a higher depth than a sub-constraint.
+If it's compound, the depth is the maximum depth of all its sub-constraints + 1. A super-constraint will always have a higher depth than a sub-constraint.
 This means the depth effectively serves as a priority: we process all constraints starting with the least depth.
 This allows us to process all constraints bottom-up in O(n) time, compared to O(2^n) time for a naive top-down processing.
 
