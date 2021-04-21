@@ -1,15 +1,17 @@
 /* For detailed explantion of schematic, consult DOCUMENTATION.md */
 
-DROP TABLE IF EXISTS student;
-DROP TABLE IF EXISTS athletic;
-DROP TABLE IF EXISTS academic;
-DROP TABLE IF EXISTS activity;
-DROP TABLE IF EXISTS student_athletic;
-DROP TABLE IF EXISTS student_academic;
-DROP TABLE IF EXISTS student_activity;
-DROP TABLE IF EXISTS cnst;
-DROP TABLE IF EXISTS basic_cnst;
 DROP TABLE IF EXISTS compound_cnst;
+DROP TABLE IF EXISTS basic_cnst;
+DROP TABLE IF EXISTS cnst;
+DROP TABLE IF EXISTS student_action;
+DROP TABLE IF EXISTS action;
+DROP TABLE IF EXISTS student;
+
+DROP PROCEDURE IF EXISTS ACTN_SUM;
+DROP PROCEDURE IF EXISTS YEAR_CNT;
+DROP PROCEDURE IF EXISTS ACTN_FREQ;
+DROP PROCEDURE IF EXISTS ACTN_CSTV;
+
 
 
 
@@ -32,68 +34,28 @@ CREATE TABLE student (
 	PRIMARY KEY (stdt_id)
 );
 
-
-
-/* Athletics ("Red W") */
-CREATE TABLE athletic ( 
-	athl_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+/* Actions */
+CREATE TABLE action (
+	actn_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	type TINYINT(1) NOT NULL, /* 0 for Athletic, 1 for Academic, 2 for Activity */
 	name VARCHAR(64) NOT NULL,
-	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of athletic */
+	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of action */
 
-	PRIMARY KEY (athl_id)
-);
-
-/* Academics ("White W")*/
-CREATE TABLE academic (
-	acdm_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-	name VARCHAR(64) NOT NULL,
-	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of academic */
-
-	PRIMARY KEY (acdm_id)
-);
-
-/* Activities ("Blue W")*/
-CREATE TABLE activity (
-	actv_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-	name VARCHAR(64) NOT NULL,
-	points TINYINT UNSIGNED NOT NULL DEFAULT 0, /* Point value of activity */
-
-	PRIMARY KEY (actv_id)
+	PRIMARY KEY (actn_id),
+	UNIQUE (name)
 );
 
 
 
-/* Student taking athletics for a specific year */
-CREATE TABLE student_athletic (
+/* Student participating in an action for a specific year */
+CREATE TABLE student_action (
 	stdt_id MEDIUMINT UNSIGNED NOT NULL,
-	athl_id SMALLINT UNSIGNED NOT NULL,
+	actn_id SMALLINT UNSIGNED NOT NULL,
 	start_year YEAR NOT NULL, /* Start year of current school year. If the year is 2020-2021, put 2020 here */
 
 	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
-	FOREIGN KEY (athl_id) REFERENCES athletic(athl_id),
-	UNIQUE (stdt_id, athl_id, start_year)
-);
-
-/* Student achieving academics for a specific year */
-CREATE TABLE student_academic (
-	stdt_id MEDIUMINT UNSIGNED NOT NULL,
-	acdm_id SMALLINT UNSIGNED NOT NULL,
-	start_year YEAR NOT NULL, /* Start year of current school year. If the year is 2020-2021, put 2020 here */
-	
-	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
-	FOREIGN KEY (acdm_id) REFERENCES academic(acdm_id),
-	UNIQUE (stdt_id, acdm_id, start_year)
-);
-
-/* Student partaking in activities for a specific year */
-CREATE TABLE student_activity (
-	stdt_id MEDIUMINT UNSIGNED NOT NULL,
-	actv_id SMALLINT UNSIGNED NOT NULL,
-	start_year YEAR NOT NULL, /* Start year of current school year. If the year is 2020-2021, put 2020 here */
-
-	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
-	FOREIGN KEY (actv_id) REFERENCES activity(actv_id),
-	UNIQUE (stdt_id, actv_id, start_year)
+	FOREIGN KEY (actn_id) REFERENCES action(actn_id),
+	UNIQUE (stdt_id, actn_id, start_year)
 );
 
 
@@ -104,7 +66,7 @@ CREATE TABLE cnst (
 	depth SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 	name VARCHAR(64),
 	description VARCHAR(64) NOT NULL,
-	type TINYINT(1) NOT NULL,
+	type TINYINT(1) NOT NULL, /* See DOCUMENTATION.md */
 	is_award BOOLEAN NOT NULL,
 
 	PRIMARY KEY (cnst_id),
@@ -122,8 +84,7 @@ CREATE TABLE basic_cnst (
 	y TINYINT UNSIGNED NOT NULL, /* Interval end */
 
 	PRIMARY KEY (cnst_id),
-	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id),
-	CHECK (actn_type IN (0, 1, 2))
+	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id)
 );
 
 /* Compound constraint edge list */
@@ -143,23 +104,157 @@ CREATE TABLE compound_cnst (
  */
 
 
+ DELIMITER //
 
 /* Calculation for basic constraint type 1 (summing action points) */
-CREATE PROCEDURE actn_sum (
-	IN student MEDIUMINT UNSIGNED,
-	IN actn_type TINYINT(1),
-	IN mx TINYINT UNSIGNED,
-	OUT result TINYINT
-)
+CREATE PROCEDURE ACTN_SUM (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_mx TINYINT UNSIGNED, OUT result TINYINT UNSIGNED)
 BEGIN
-	SELECT COALESCE(SUM(points), 0) INTO result FROM (
-		SELECT GREATEST(points, COALESCE(mx, 0)) AS points
-		FROM (
-			CASE actn_type
-				WHEN 0 THEN athletic,
-				WHEN 1 THEN academic,
-				WHEN 2 THEN activity
-		)
-		WHERE stdt_id=student
-	)
+	SELECT COALESCE(SUM(res.points), 0) INTO result
+	FROM (
+		SELECT LEAST(a.points, p_mx) points, s_a.actn_id
+		FROM student_action s_a
+		INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+		WHERE s_a.stdt_id=p_stdt_id
+	) res;
 END;
+//
+
+/* Calculation for basic constraint type 2 (years in high school) */
+CREATE PROCEDURE YEAR_CNT (IN p_stdt_id MEDIUMINT UNSIGNED, OUT result TINYINT UNSIGNED)
+BEGIN
+	SELECT grad_year-start_year INTO result
+	FROM student WHERE stdt_id=p_stdt_id LIMIT 1;
+END;
+//
+
+/* Calculation for basic constraint type 3 (frequency) */
+CREATE PROCEDURE ACTN_FREQ (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_actn_id SMALLINT UNSIGNED, OUT result TINYINT UNSIGNED)
+BEGIN
+	/*
+	 * a. If only action id is given, count frequency of that specific action
+	 * b. If both are given, count maximum frequency of any specific action (note: the action id is ignored)
+	 * c. If only action type is given, count frequency of all actions of that type
+	 * If none of those are satisfied, raise an exception
+	 */
+	IF p_actn_type IS NULL AND p_actn_id IS NOT NULL THEN
+		SELECT COUNT(*) INTO result FROM student_action s_a WHERE s_a.stdt_id=p_stdt_id AND actn_id=p_actn_id;
+	ELSEIF p_actn_type IS NOT NULL AND p_actn_id IS NOT NULL THEN
+		SELECT MAX(freq) INTO result
+		FROM (
+			SELECT s_a.actn_id, COUNT(*) freq
+			FROM student_action s_a
+			INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+			WHERE s_a.stdt_id=p_stdt_id
+			GROUP BY s_a.actn_id
+		) res;
+	ELSEIF p_actn_type IS NOT NULL THEN
+		SELECT COUNT(*) INTO result
+		FROM (
+			SELECT s_a.actn_id
+			FROM student_action s_a
+			INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+			WHERE s_a.stdt_id=p_stdt_id
+		) res;
+	ELSE
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'At least one of action id or action type must be not null';
+	END IF;
+	SELECT COALESCE(result, 0) INTO result;
+END;
+//
+
+/* Calculation for basic constraint type 3 (consecutive actions) */
+CREATE PROCEDURE ACTN_CSTV (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_actn_id SMALLINT UNSIGNED, OUT result TINYINT UNSIGNED)
+BEGIN
+	SELECT @last_lst := 2, @last_actn_id := 0, @last_yr := 0;
+	/*
+	 * a. If only action id is given, count maximum consecutive occurrence of that specific action
+	 * b. If both are given, count maximum consecutive occurrence of any specific action (note: the action id is ignored)
+	 * c. If only action type is given, count maximum consecutive occurrence of all actions of that type
+	 * If none of those are satisfied, raise an exception
+	 */
+	IF p_actn_type IS NULL AND p_actn_id IS NOT NULL THEN
+		SELECT MAX(cstv) INTO result
+		FROM (
+			SELECT (lst-@last_lst>0) valid, yr-@last_yr cstv, @last_lst := lst, @last_yr := yr
+			FROM (
+				SELECT MIN(sequence_combined.lst) lst, yr
+				FROM (
+					SELECT 1 lst, start_year yr
+					FROM student_action s_a
+					WHERE s_a.stdt_id=p_stdt_id AND actn_id=p_actn_id
+					UNION ALL
+					SELECT 2 lst, start_year+1 yr
+					FROM (
+						SELECT s_a.start_year
+						FROM student_action s_a
+						WHERE s_a.stdt_id=p_stdt_id AND actn_id=p_actn_id
+					) sequence_copy
+				) sequence_combined
+				GROUP BY yr
+				HAVING COUNT(*)=1
+				ORDER BY yr
+			) bounds
+		) res
+		WHERE valid;
+	ELSEIF p_actn_type IS NOT NULL AND p_actn_id IS NOT NULL THEN
+		SELECT MAX(cstv) INTO result
+		FROM (
+			SELECT (lst-@last_lst>0 AND actn_id=@last_actn_id) valid, IF(yr>@last_yr, yr-@last_yr, 0) cstv, @last_lst := lst, @last_actn_id := actn_id, @last_yr := yr
+			FROM (
+				SELECT MIN(sequence_combined.lst) lst, actn_id, yr
+				FROM (
+					SELECT 1 lst, s_a.actn_id, s_a.start_year yr
+					FROM student_action s_a
+					INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+					WHERE s_a.stdt_id=p_stdt_id
+					UNION ALL
+					SELECT 2 lst, actn_id, start_year+1 yr
+					FROM (
+						SELECT s_a.actn_id, s_a.start_year
+						FROM student_action s_a
+						INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+						WHERE s_a.stdt_id=p_stdt_id
+					) sequence_copy
+				) sequence_combined
+				GROUP BY actn_id, yr
+				HAVING COUNT(*)=1
+				ORDER BY actn_id, yr
+			) bounds
+		) res
+		WHERE valid;
+	ELSEIF p_actn_type IS NOT NULL THEN
+		SELECT MAX(cstv) INTO result
+		FROM (
+			SELECT (lst-@last_lst>0) valid, yr-@last_yr cstv, @last_lst := lst, @last_yr := yr
+			FROM (
+				SELECT MIN(sequence_combined.lst) lst, yr
+				FROM (
+					SELECT 1 lst, s_a.start_year yr
+					FROM student_action s_a
+					INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+					WHERE s_a.stdt_id=p_stdt_id
+					GROUP BY s_a.start_year
+					UNION ALL
+					SELECT 2 lst, start_year+1 yr
+					FROM (
+						SELECT s_a.start_year
+						FROM student_action s_a
+						INNER JOIN action a ON a.actn_id=s_a.actn_id AND a.type=p_actn_type
+						WHERE s_a.stdt_id=p_stdt_id
+						GROUP BY s_a.start_year
+					) sequence_copy
+				) sequence_combined
+				GROUP BY yr
+				HAVING COUNT(*)=1
+				ORDER BY yr
+			) bounds
+		) res
+		WHERE valid;
+	ELSE
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'At least one of action id or action type must be not null';
+	END IF;
+	SELECT COALESCE(result, 0) INTO result;
+END;
+//
+
+DELIMITER ;

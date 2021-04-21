@@ -22,58 +22,33 @@ A student schematic is given below:
 |Start year|year|1|
 |Grad year|year|1|
 
-## Action
+## Actions
 Students can achieve three types of _actions_ for points of that type. E.g, they can participate in an athletic to get athletic points.
 Awards can be based on these points, but may also be based on having completed certain actions (see Awards section).
 
-The different action schematics are given below. An action can give a different amount of points (e.g., major sports are worth 2 points while minor ones are worth only 1).
+Each action also has a type, being 0 for an Athletic, 1 for an Academic, and 2 for an Activity. All types of actions are storeds in a single table for easier SQL queries.
+
+An action can give a different amount of points (e.g., major sports are worth 2 points while minor ones are worth only 1).
 Rather than keeping track of which students have however many points, it's better to just calculate it on the fly with a SQL SUM() function when assigning awards.
 
-#### Athletic
+#### Action
 |attribute|type|required|
 |---|---|---|
 |Identifier|int|1|
+|Type|digit|1
 |Name|string|1|
 |Points|int|1|
 
-#### Academic
-|attribute|type|required|
-|---|---|---|
-|Identifier|int|1|
-|Name|string|1|
-|Points|int|1|
-
-#### Activity
-|attribute|type|required|
-|---|---|---|
-|Identifier|int|1|
-|Name|string|1|
-|Points|int|1|
-
-Linking tables are used to model a student completing an action in a particular school year. The starting year of the school year is used.
+A linking tables is used to model a student completing an action in a particular school year, being a many-to-many relationship. The starting year of the school year is used.
 For example, if a student participated in a club in the 2020-2021 school year, the start year should be 2020.
 
-The linking table schematics are given below.
+The linking table schematic is given below.
 
-#### Student x Athletic
+#### Student x Action
 |attribute|type|required|
 |---|---|---|
 |Student ID|int|1|
-|Athletic ID|int|1|
-|Start year|year|1|
-
-#### Student x Academic
-|attribute|type|required|
-|---|---|---|
-|Student ID|int|1|
-|Academic ID|int|1|
-|Start year|year|1|
-
-#### Student x Activity
-|attribute|type|required|
-|---|---|---|
-|Student ID|int|1|
-|Activity ID|int|1|
+|Action ID|int|1|
 |Start year|year|1|
 
 ## Awards
@@ -141,8 +116,8 @@ There are 4 kinds of basic conditional that will be used in this application:
 	b. The maximum consecutive years of _any_ specific action in a specific action type should be in an interval _x_ to _y_
 	c. The maximum consecutive years of _all_ actions in a specific action type should be in an interval _x_ to _y_
 
-These calculations are facilitated as SQL procedures. Note that there can be multiple specific conditions that fall under one kind, depending on what information is provided.
-See the SQL schema file for specific implementation.
+These calculations are facilitated by SQL procedures. Note that there can be multiple specific conditions that fall under one kind, depending on what information is provided.
+Since 3.b and 4.b can have multiple values, we choose the action that maximizes the value. See the SQL schema file for specific implementation.
 
 ### Schematic
 In theory, each constraint forms the node of a DAG. Since there's not really a sense of a parent/child relationship in a DAG, we refer to it as a super/sub relationship.
@@ -156,6 +131,7 @@ The depth field stores something similar to depth in a tree. If the constraint i
 If it's compound, the depth is 1 + the maximum depth of all its sub-constraints. A super-constraint will always have a higher depth than a sub-constraint.
 This means the depth effectively serves as a priority: we process all constraints starting with the least depth.
 This allows us to process all constraints bottom-up in O(n) time, compared to O(2^n) time for a naive top-down processing.
+This is essentially a topological sorting, but having a depth field makes the SQL code simpler.
 
 The name field is only required if the constraint is an award. The description field describes the constraint and is used in the UI.  
 If the type is 2, 3, 4, or 5, a constraint is basic (corresponds to 1...4 above), and parameter information for a procedure call is stored in a seperate table.
