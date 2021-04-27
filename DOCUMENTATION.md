@@ -51,6 +51,16 @@ The linking table schematic is given below.
 |Action ID|int|1|
 |Start year|year|1|
 
+Since past actions may not always apply, there should be the option to remove actions.
+However, directly removing them from the database would cause all past students who took that action to be affected (and wouldn't be possible since foreign keys are enforced).
+Instead, an archived action table stores old actions that are no longer displayed in the UI, but that are kept for compatibility.
+In the case that there are no references to the action, removing it should delete it from the database.
+
+#### Action Archive
+|attribute|type|required|
+|---|---|---|
+|Identifier|int|1|
+
 ## Awards
 Each award can be represented as a name and one or more sets of constraints. A constraint is a hypothetical object that evaluates to true if all of its conditions evaluate to true.
 A student who satisfies any set of those constraints will be granted that award.

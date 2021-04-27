@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS compound_cnst;
 DROP TABLE IF EXISTS basic_cnst;
 DROP TABLE IF EXISTS cnst;
 DROP TABLE IF EXISTS student_action;
+DROP TABLE IF EXISTS action_archive;
 DROP TABLE IF EXISTS action;
 DROP TABLE IF EXISTS student;
 
@@ -34,6 +35,8 @@ CREATE TABLE student (
 	PRIMARY KEY (stdt_id)
 );
 
+
+
 /* Actions */
 CREATE TABLE action (
 	actn_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -45,7 +48,13 @@ CREATE TABLE action (
 	UNIQUE (name)
 );
 
+/* Archived actions */
+CREATE TABLE action_archive (
+	actn_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
 
+	PRIMARY KEY (actn_id),
+	FOREIGN KEY (actn_id) REFERENCES action(actn_id)
+);
 
 /* Student participating in an action for a specific year */
 CREATE TABLE student_action (
