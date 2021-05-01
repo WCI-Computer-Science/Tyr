@@ -30,7 +30,7 @@
     <ClInclude Include="WCIPointsDoc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WCIPointsView.h">
+    <ClInclude Include="StudentView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Resource.h">
@@ -48,6 +48,9 @@
     <ClInclude Include="CActionAddDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ActionView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WCIPoints.cpp">
@@ -59,7 +62,7 @@
     <ClCompile Include="WCIPointsDoc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WCIPointsView.cpp">
+    <ClCompile Include="StudentView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CActionAddDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ActionView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

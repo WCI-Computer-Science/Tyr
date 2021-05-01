@@ -1,7 +1,3 @@
-
-// WCIPointsView.cpp : implementation of the CWCIPointsView class
-//
-
 #include "pch.h"
 #include "framework.h"
 // SHARED_HANDLERS can be defined in an ATL project implementing preview, thumbnail
@@ -11,41 +7,40 @@
 #endif
 
 #include "WCIPointsDoc.h"
-#include "WCIPointsView.h"
+#include "ActionView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
-// CWCIPointsView
 
-IMPLEMENT_DYNCREATE(CWCIPointsView, CFormView)
+IMPLEMENT_DYNCREATE(CActionView, CFormView)
 
-BEGIN_MESSAGE_MAP(CWCIPointsView, CFormView)
+BEGIN_MESSAGE_MAP(CActionView, CFormView)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
-// CWCIPointsView construction/destruction
 
-CWCIPointsView::CWCIPointsView() noexcept
-	: CFormView(IDD_WCIPOINTS)
+
+CActionView::CActionView() noexcept
+	: CFormView(IDD_ACTION)
 {
 	// TODO: add construction code here
 
 }
 
-CWCIPointsView::~CWCIPointsView()
+CActionView::~CActionView()
 {
 }
 
-void CWCIPointsView::DoDataExchange(CDataExchange* pDX)
+void CActionView::DoDataExchange(CDataExchange* pDX)
 {
 	CFormView::DoDataExchange(pDX);
 }
 
-BOOL CWCIPointsView::PreCreateWindow(CREATESTRUCT& cs)
+BOOL CActionView::PreCreateWindow(CREATESTRUCT& cs)
 {
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
@@ -53,7 +48,7 @@ BOOL CWCIPointsView::PreCreateWindow(CREATESTRUCT& cs)
 	return CView::PreCreateWindow(cs);
 }
 
-void CWCIPointsView::OnInitialUpdate()
+void CActionView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
 	GetParentFrame()->RecalcLayout();
@@ -61,13 +56,13 @@ void CWCIPointsView::OnInitialUpdate()
 
 }
 
-void CWCIPointsView::OnRButtonUp(UINT /* nFlags */, CPoint point)
+void CActionView::OnRButtonUp(UINT /* nFlags */, CPoint point)
 {
 	ClientToScreen(&point);
 	OnContextMenu(this, point);
 }
 
-void CWCIPointsView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
+void CActionView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 {
 #ifndef SHARED_HANDLERS
 	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
@@ -75,20 +70,20 @@ void CWCIPointsView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 }
 
 
-// CWCIPointsView diagnostics
+// CActionView diagnostics
 
 #ifdef _DEBUG
-void CWCIPointsView::AssertValid() const
+void CActionView::AssertValid() const
 {
 	CView::AssertValid();
 }
 
-void CWCIPointsView::Dump(CDumpContext& dc) const
+void CActionView::Dump(CDumpContext& dc) const
 {
 	CView::Dump(dc);
 }
 
-CWCIPointsDoc* CWCIPointsView::GetDocument() const // non-debug version is inline
+CWCIPointsDoc* CActionView::GetDocument() const // non-debug version is inline
 {
 	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CWCIPointsDoc)));
 	return (CWCIPointsDoc*)m_pDocument;
@@ -96,4 +91,4 @@ CWCIPointsDoc* CWCIPointsView::GetDocument() const // non-debug version is inlin
 #endif //_DEBUG
 
 
-// CWCIPointsView message handlers
+// CActionView message handlers

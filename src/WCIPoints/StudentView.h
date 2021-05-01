@@ -1,18 +1,17 @@
 
-// WCIPointsView.h : interface of the CWCIPointsView class
+// StudentView.h : interface of the CStudentView class
 //
 
 #pragma once
 
 
-class CWCIPointsView : public CFormView
+class CStudentView : public CFormView
 {
-protected: // create from serialization only
-	CWCIPointsView() noexcept;
-	DECLARE_DYNCREATE(CWCIPointsView)
-public:
+public: // create from serialization only
+	CStudentView() noexcept;
+	DECLARE_DYNCREATE(CStudentView)
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_WCIPOINTS };
+	enum { IDD = IDD_STUDENT };
 #endif
 
 // Attributes
@@ -31,7 +30,7 @@ protected:
 
 // Implementation
 public:
-	virtual ~CWCIPointsView();
+	virtual ~CStudentView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -48,7 +47,7 @@ protected:
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
-inline CWCIPointsDoc* CWCIPointsView::GetDocument() const
+inline CWCIPointsDoc* CStudentView::GetDocument() const
    { return reinterpret_cast<CWCIPointsDoc*>(m_pDocument); }
 #endif
 

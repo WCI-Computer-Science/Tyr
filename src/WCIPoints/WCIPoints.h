@@ -33,6 +33,13 @@ public:
 
 	afx_msg void OnAppAbout();
 	DECLARE_MESSAGE_MAP()
+
+private:
+	CView* m_pStudentView;
+	CView* m_pActionView;
+	CView* SwitchView(int i);
+public:
+	afx_msg void OnFileTest();
 };
 
 extern CWCIPointsApp theApp;

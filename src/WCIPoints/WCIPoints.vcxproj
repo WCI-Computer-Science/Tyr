@@ -188,6 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Action.h" />
+    <ClInclude Include="ActionView.h" />
     <ClInclude Include="CActionAddDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MainFrm.h" />
@@ -197,10 +198,11 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WCIPoints.h" />
     <ClInclude Include="WCIPointsDoc.h" />
-    <ClInclude Include="WCIPointsView.h" />
+    <ClInclude Include="StudentView.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Action.cpp" />
+    <ClCompile Include="ActionView.cpp" />
     <ClCompile Include="CActionAddDlg.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="pch.cpp">
@@ -212,7 +214,7 @@
     <ClCompile Include="Student.cpp" />
     <ClCompile Include="WCIPoints.cpp" />
     <ClCompile Include="WCIPointsDoc.cpp" />
-    <ClCompile Include="WCIPointsView.cpp" />
+    <ClCompile Include="StudentView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WCIPoints.rc" />

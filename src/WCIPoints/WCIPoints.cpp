@@ -10,7 +10,8 @@
 #include "MainFrm.h"
 
 #include "WCIPointsDoc.h"
-#include "WCIPointsView.h"
+#include "StudentView.h"
+#include "ActionView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -106,7 +107,7 @@ BOOL CWCIPointsApp::InitInstance()
 		IDR_MAINFRAME,
 		RUNTIME_CLASS(CWCIPointsDoc),
 		RUNTIME_CLASS(CMainFrame),       // main SDI frame window
-		RUNTIME_CLASS(CWCIPointsView));
+		RUNTIME_CLASS(CStudentView));
 	if (!pDocTemplate)
 		return FALSE;
 	AddDocTemplate(pDocTemplate);
@@ -123,10 +124,51 @@ BOOL CWCIPointsApp::InitInstance()
 	if (!ProcessShellCommand(cmdInfo))
 		return FALSE;
 
+	m_pStudentView = ((CFrameWnd*)m_pMainWnd)->GetActiveView();
+	m_pActionView = (CView*) new CActionView;
+
+	CDocument* pCurrentDoc = ((CFrameWnd*)m_pMainWnd)->GetActiveDocument();
+
+	CCreateContext newContext;
+	newContext.m_pNewViewClass = NULL;
+	newContext.m_pNewDocTemplate = NULL;
+	newContext.m_pLastView = NULL;
+	newContext.m_pCurrentFrame = NULL;
+	newContext.m_pCurrentDoc = pCurrentDoc;
+
+	UINT viewID = AFX_IDW_PANE_FIRST + 1;
+	CRect rect(0, 0, 0, 0); // Gets resized later.
+
+	// Create the new view. In this example, the view persists for
+	// the life of the application. The application automatically
+	// deletes the view when the application is closed.
+	m_pActionView->Create(NULL, _T("AnyWindowName"), WS_CHILD, rect, m_pMainWnd, viewID, &newContext);
+
+	// When a document template creates a view, the WM_INITIALUPDATE
+	// message is sent automatically. However, this code must
+	// explicitly send the message, as follows.
+	m_pActionView->SendMessage(WM_INITIALUPDATE, 0, 0);
+
 	// The one and only window has been initialized, so show and update it
 	m_pMainWnd->ShowWindow(SW_SHOW);
 	m_pMainWnd->UpdateWindow();
 	return TRUE;
+}
+
+CView* CWCIPointsApp::SwitchView(int i) {
+	CView* pActiveView = ((CFrameWnd*)m_pMainWnd)->GetActiveView();
+	CView* pNewView = m_pActionView;
+
+	UINT temp = ::GetWindowLong(pActiveView->m_hWnd, GWL_ID);
+	::SetWindowLong(pActiveView->m_hWnd, GWL_ID, ::GetWindowLong(pNewView->m_hWnd, GWL_ID));
+	::SetWindowLong(pNewView->m_hWnd, GWL_ID, temp);
+
+	pActiveView->ShowWindow(SW_HIDE);
+	pNewView->ShowWindow(SW_SHOW);
+	((CFrameWnd*)m_pMainWnd)->SetActiveView(pNewView);
+	((CFrameWnd*)m_pMainWnd)->RecalcLayout();
+	pNewView->Invalidate();
+	return pActiveView;
 }
 
 // CWCIPointsApp message handlers
