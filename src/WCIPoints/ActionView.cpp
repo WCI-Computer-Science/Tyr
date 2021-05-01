@@ -1,3 +1,6 @@
+
+// ActionView.cpp : implementation of the CActionView class
+
 #include "pch.h"
 #include "framework.h"
 // SHARED_HANDLERS can be defined in an ATL project implementing preview, thumbnail

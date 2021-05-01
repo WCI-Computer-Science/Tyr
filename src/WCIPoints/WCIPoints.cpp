@@ -12,6 +12,7 @@
 #include "WCIPointsDoc.h"
 #include "StudentView.h"
 #include "ActionView.h"
+#include "AwardView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -25,6 +26,9 @@ BEGIN_MESSAGE_MAP(CWCIPointsApp, CWinAppEx)
 	// Standard file based document commands
 	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
+	ON_COMMAND(ID_STUDENTS_MANAGE, &CWCIPointsApp::OnStudentsManage)
+	ON_COMMAND(ID_ACTIONS_MANAGE, &CWCIPointsApp::OnActionsManage)
+	ON_COMMAND(ID_AWARDS_MANAGE, &CWCIPointsApp::OnAwardsManage)
 END_MESSAGE_MAP()
 
 
@@ -107,7 +111,7 @@ BOOL CWCIPointsApp::InitInstance()
 		IDR_MAINFRAME,
 		RUNTIME_CLASS(CWCIPointsDoc),
 		RUNTIME_CLASS(CMainFrame),       // main SDI frame window
-		RUNTIME_CLASS(CStudentView));
+		RUNTIME_CLASS(CStudentView));    // StudentView is default view
 	if (!pDocTemplate)
 		return FALSE;
 	AddDocTemplate(pDocTemplate);
@@ -124,8 +128,7 @@ BOOL CWCIPointsApp::InitInstance()
 	if (!ProcessShellCommand(cmdInfo))
 		return FALSE;
 
-	m_pStudentView = ((CFrameWnd*)m_pMainWnd)->GetActiveView();
-	m_pActionView = (CView*) new CActionView;
+	m_pViews[0] = ((CFrameWnd*)m_pMainWnd)->GetActiveView();
 
 	CDocument* pCurrentDoc = ((CFrameWnd*)m_pMainWnd)->GetActiveDocument();
 
@@ -136,18 +139,19 @@ BOOL CWCIPointsApp::InitInstance()
 	newContext.m_pCurrentFrame = NULL;
 	newContext.m_pCurrentDoc = pCurrentDoc;
 
+
+	m_pViews[1] = (CView*) new CActionView;
 	UINT viewID = AFX_IDW_PANE_FIRST + 1;
-	CRect rect(0, 0, 0, 0); // Gets resized later.
+	CRect actionRect(0, 0, 0, 0);
+	m_pViews[1]->Create(NULL, _T("AnyWindowName"), WS_CHILD, actionRect, m_pMainWnd, viewID, &newContext);
+	m_pViews[1]->SendMessage(WM_INITIALUPDATE, 0, 0);
 
-	// Create the new view. In this example, the view persists for
-	// the life of the application. The application automatically
-	// deletes the view when the application is closed.
-	m_pActionView->Create(NULL, _T("AnyWindowName"), WS_CHILD, rect, m_pMainWnd, viewID, &newContext);
+	m_pViews[2] = (CView*) new CAwardView;
+	viewID += 1;
+	CRect awardRect(0, 0, 0, 0);
+	m_pViews[2]->Create(NULL, _T("AnyWindowName"), WS_CHILD, awardRect, m_pMainWnd, viewID, &newContext);
+	m_pViews[2]->SendMessage(WM_INITIALUPDATE, 0, 0);
 
-	// When a document template creates a view, the WM_INITIALUPDATE
-	// message is sent automatically. However, this code must
-	// explicitly send the message, as follows.
-	m_pActionView->SendMessage(WM_INITIALUPDATE, 0, 0);
 
 	// The one and only window has been initialized, so show and update it
 	m_pMainWnd->ShowWindow(SW_SHOW);
@@ -157,7 +161,10 @@ BOOL CWCIPointsApp::InitInstance()
 
 CView* CWCIPointsApp::SwitchView(int i) {
 	CView* pActiveView = ((CFrameWnd*)m_pMainWnd)->GetActiveView();
-	CView* pNewView = m_pActionView;
+	CView* pNewView = m_pViews[i];
+
+	if (pActiveView == pNewView)
+		return pActiveView;
 
 	UINT temp = ::GetWindowLong(pActiveView->m_hWnd, GWL_ID);
 	::SetWindowLong(pActiveView->m_hWnd, GWL_ID, ::GetWindowLong(pNewView->m_hWnd, GWL_ID));
@@ -234,3 +241,21 @@ void CWCIPointsApp::SaveCustomState()
 
 // CWCIPointsApp message handlers
 
+
+
+void CWCIPointsApp::OnStudentsManage()
+{
+	SwitchView(0);
+}
+
+
+void CWCIPointsApp::OnActionsManage()
+{
+	SwitchView(1);
+}
+
+
+void CWCIPointsApp::OnAwardsManage()
+{
+	SwitchView(2);
+}

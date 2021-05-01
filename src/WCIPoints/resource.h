@@ -17,6 +17,7 @@
 #define IDD_ACTION_ADD                  311
 #define IDD_ACTION                      316
 #define IDD_STUDENT                     318
+#define IDD_AWARD                       320
 #define IDC_LIST_TYPE                   1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_POINTS                 1004
@@ -30,13 +31,16 @@
 #define ID_STUDENTS_MANAGEACTIONS       32777
 #define ID_HELP_INSTRUCTIONS            32778
 #define ID_FILE_TEST                    32779
+#define ID_STUDENTS_MANAGE              32780
+#define ID_ACTIONS_MANAGE               32781
+#define ID_AWARDS_MANAGE                32782
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        320
-#define _APS_NEXT_COMMAND_VALUE         32780
+#define _APS_NEXT_RESOURCE_VALUE        322
+#define _APS_NEXT_COMMAND_VALUE         32783
 #define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

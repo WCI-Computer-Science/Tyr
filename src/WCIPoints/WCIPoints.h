@@ -35,11 +35,15 @@ public:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	CView* m_pStudentView;
-	CView* m_pActionView;
+	// CView object memory deallocated by MFC
+	// [0] is StudentView, [1] is ActionView, [2] is ConstraintView
+	CView* m_pViews[3];
 	CView* SwitchView(int i);
 public:
 	afx_msg void OnFileTest();
+	afx_msg void OnStudentsManage();
+	afx_msg void OnActionsManage();
+	afx_msg void OnAwardsManage();
 };
 
 extern CWCIPointsApp theApp;

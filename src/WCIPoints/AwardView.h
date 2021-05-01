@@ -1,26 +1,26 @@
 
-// StudentView.h : interface of the CStudentView class
+// AwardView.h : interface of the CAwardView class
 
 #pragma once
 
 
-class CStudentView : public CFormView
+class CAwardView : public CFormView
 {
 public: // create from serialization only
-	CStudentView() noexcept;
-	DECLARE_DYNCREATE(CStudentView)
+	CAwardView() noexcept;
+	DECLARE_DYNCREATE(CAwardView)
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_STUDENT };
+	enum { IDD = IDD_AWARD };
 #endif
 
-// Attributes
+	// Attributes
 public:
 	CWCIPointsDoc* GetDocument() const;
 
-// Operations
+	// Operations
 public:
 
-// Overrides
+	// Overrides
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 protected:
@@ -29,7 +29,7 @@ protected:
 
 // Implementation
 public:
-	virtual ~CStudentView();
+	virtual ~CAwardView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -37,7 +37,7 @@ public:
 
 protected:
 
-// Generated message map functions
+	// Generated message map functions
 protected:
 	afx_msg void OnFilePrintPreview();
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
@@ -46,7 +46,9 @@ protected:
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
-inline CWCIPointsDoc* CStudentView::GetDocument() const
-   { return reinterpret_cast<CWCIPointsDoc*>(m_pDocument); }
+inline CWCIPointsDoc* CAwardView::GetDocument() const
+{
+	return reinterpret_cast<CWCIPointsDoc*>(m_pDocument);
+}
 #endif
 

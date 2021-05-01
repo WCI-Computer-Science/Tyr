@@ -1,6 +1,5 @@
 
-// WCIPointsView.h : interface of the CWCIPointsView class
-//
+// ActionView.h : interface of the CActionView class
 
 #pragma once
 

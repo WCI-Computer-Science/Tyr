@@ -51,6 +51,9 @@
     <ClInclude Include="ActionView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AwardView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WCIPoints.cpp">
@@ -78,6 +81,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ActionView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AwardView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
