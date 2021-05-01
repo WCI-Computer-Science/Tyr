@@ -12,6 +12,8 @@
 
 #include "WCIPointsDoc.h"
 
+#include "CActionAddDlg.h"
+
 #include <propkey.h>
 
 #ifdef _DEBUG
@@ -23,6 +25,7 @@
 IMPLEMENT_DYNCREATE(CWCIPointsDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CWCIPointsDoc, CDocument)
+	ON_COMMAND(ID_ACTIONS_AD, &CWCIPointsDoc::OnActionAdd)
 END_MESSAGE_MAP()
 
 
@@ -136,3 +139,12 @@ void CWCIPointsDoc::Dump(CDumpContext& dc) const
 
 
 // CWCIPointsDoc commands
+
+
+void CWCIPointsDoc::OnActionAdd()
+{
+	CActionAddDlg actionAddDlg;
+	if (actionAddDlg.DoModal() == IDOK) {
+
+	}
+}

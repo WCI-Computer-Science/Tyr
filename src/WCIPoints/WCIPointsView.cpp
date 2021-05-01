@@ -20,9 +20,9 @@
 
 // CWCIPointsView
 
-IMPLEMENT_DYNCREATE(CWCIPointsView, CView)
+IMPLEMENT_DYNCREATE(CWCIPointsView, CFormView)
 
-BEGIN_MESSAGE_MAP(CWCIPointsView, CView)
+BEGIN_MESSAGE_MAP(CWCIPointsView, CFormView)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
@@ -30,6 +30,7 @@ END_MESSAGE_MAP()
 // CWCIPointsView construction/destruction
 
 CWCIPointsView::CWCIPointsView() noexcept
+	: CFormView(IDD_WCIPOINTS)
 {
 	// TODO: add construction code here
 
@@ -37,6 +38,11 @@ CWCIPointsView::CWCIPointsView() noexcept
 
 CWCIPointsView::~CWCIPointsView()
 {
+}
+
+void CWCIPointsView::DoDataExchange(CDataExchange* pDX)
+{
+	CFormView::DoDataExchange(pDX);
 }
 
 BOOL CWCIPointsView::PreCreateWindow(CREATESTRUCT& cs)
@@ -47,16 +53,12 @@ BOOL CWCIPointsView::PreCreateWindow(CREATESTRUCT& cs)
 	return CView::PreCreateWindow(cs);
 }
 
-// CWCIPointsView drawing
-
-void CWCIPointsView::OnDraw(CDC* /*pDC*/)
+void CWCIPointsView::OnInitialUpdate()
 {
-	CWCIPointsDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	if (!pDoc)
-		return;
+	CFormView::OnInitialUpdate();
+	GetParentFrame()->RecalcLayout();
+	ResizeParentToFit();
 
-	// TODO: add draw code for native data here
 }
 
 void CWCIPointsView::OnRButtonUp(UINT /* nFlags */, CPoint point)

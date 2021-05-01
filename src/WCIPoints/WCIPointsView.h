@@ -5,11 +5,15 @@
 #pragma once
 
 
-class CWCIPointsView : public CView
+class CWCIPointsView : public CFormView
 {
 protected: // create from serialization only
 	CWCIPointsView() noexcept;
 	DECLARE_DYNCREATE(CWCIPointsView)
+public:
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_WCIPOINTS };
+#endif
 
 // Attributes
 public:
@@ -20,9 +24,10 @@ public:
 
 // Overrides
 public:
-	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void OnInitialUpdate(); // called first time after construct
 
 // Implementation
 public:

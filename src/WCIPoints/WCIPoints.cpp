@@ -192,5 +192,3 @@ void CWCIPointsApp::SaveCustomState()
 
 // CWCIPointsApp message handlers
 
-
-
