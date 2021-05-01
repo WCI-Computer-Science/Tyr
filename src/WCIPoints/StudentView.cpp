@@ -3,11 +3,8 @@
 
 #include "pch.h"
 #include "framework.h"
-// SHARED_HANDLERS can be defined in an ATL project implementing preview, thumbnail
-// and search filter handlers and allows sharing of document code with that project.
-#ifndef SHARED_HANDLERS
+
 #include "WCIPoints.h"
-#endif
 
 #include "WCIPointsDoc.h"
 #include "StudentView.h"
@@ -66,9 +63,7 @@ void CStudentView::OnRButtonUp(UINT /* nFlags */, CPoint point)
 
 void CStudentView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 {
-#ifndef SHARED_HANDLERS
 	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
-#endif
 }
 
 
