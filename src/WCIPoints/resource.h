@@ -18,10 +18,16 @@
 #define IDD_ACTION                      316
 #define IDD_STUDENT                     318
 #define IDD_AWARD                       320
+#define IDD_ACTION_CHANGE_TYPE          322
 #define IDC_LIST_TYPE                   1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_POINTS                 1004
 #define IDC_SPIN_POINTS                 1007
+#define IDC_TITLE                       1008
+#define IDC_ACTION_TYPE_STATIC          1010
+#define IDC_ACTION_TYPE_CHANGE          1011
+#define IDC_LIST1                       1012
+#define IDC_ACTION_TYPE_LIST            1012
 #define ID_STUDENT_ADD                  32771
 #define ID_STUDENT_EDIT                 32772
 #define ID_ACTIONS_AD                   32773
@@ -39,9 +45,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        322
+#define _APS_NEXT_RESOURCE_VALUE        324
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

@@ -9,6 +9,8 @@
 #include "WCIPointsDoc.h"
 #include "ActionView.h"
 
+#include "afxdialogex.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -20,12 +22,14 @@ IMPLEMENT_DYNCREATE(CActionView, CFormView)
 BEGIN_MESSAGE_MAP(CActionView, CFormView)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
+	ON_BN_CLICKED(IDC_ACTION_TYPE_CHANGE, &CActionView::OnBnClickedActionTypeChange)
 END_MESSAGE_MAP()
 
 
 
 CActionView::CActionView() noexcept
 	: CFormView(IDD_ACTION)
+	, m_type(0)
 {
 	// TODO: add construction code here
 
@@ -38,6 +42,8 @@ CActionView::~CActionView()
 void CActionView::DoDataExchange(CDataExchange* pDX)
 {
 	CFormView::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_ACTION_TYPE_STATIC, m_type_static);
 }
 
 BOOL CActionView::PreCreateWindow(CREATESTRUCT& cs)
@@ -51,6 +57,50 @@ BOOL CActionView::PreCreateWindow(CREATESTRUCT& cs)
 void CActionView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
+
+	m_titleFont.CreateFontW(
+		20,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+	m_title.SetFont(&m_titleFont);
+
+	if (m_type == 0)
+		m_type_static.SetWindowTextW(_T("Athletics"));
+	else if (m_type == 1)
+		m_type_static.SetWindowTextW(_T("Academics"));
+	else if (m_type == 2)
+		m_type_static.SetWindowTextW(_T("Activities"));
+
+	m_type_staticFont.CreateFontW(
+		50,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+	m_type_static.SetFont(&m_type_staticFont);
+
 	GetParentFrame()->RecalcLayout();
 	ResizeParentToFit();
 
@@ -90,3 +140,51 @@ CWCIPointsDoc* CActionView::GetDocument() const // non-debug version is inline
 
 
 // CActionView message handlers
+
+
+void CActionView::OnBnClickedActionTypeChange()
+{
+	CActionChangeTypeDlg actionChangeTypeDlg;
+	if (actionChangeTypeDlg.DoModal() == IDOK) {
+	}
+}
+
+
+
+
+// ActionChangeTypeDlg dialog
+
+IMPLEMENT_DYNAMIC(CActionChangeTypeDlg, CDialogEx)
+
+CActionChangeTypeDlg::CActionChangeTypeDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_ACTION_CHANGE_TYPE, pParent)
+{
+
+}
+
+CActionChangeTypeDlg::~CActionChangeTypeDlg()
+{
+}
+
+BOOL CActionChangeTypeDlg::OnInitDialog() {
+	CDialog::OnInitDialog();
+
+	m_type_list.AddString(_T("Athletics"));
+	m_type_list.AddString(_T("Academics"));
+	m_type_list.AddString(_T("Activities"));
+
+	return TRUE;
+}
+
+void CActionChangeTypeDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_ACTION_TYPE_LIST, m_type_list);
+}
+
+
+BEGIN_MESSAGE_MAP(CActionChangeTypeDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// ActionChangeTypeDlg message handlers

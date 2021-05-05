@@ -43,6 +43,15 @@ protected:
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_type;
+	CFont m_type_staticFont;
+	CStatic m_type_static;
+public:
+	afx_msg void OnBnClickedActionTypeChange();
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
@@ -52,3 +61,27 @@ inline CWCIPointsDoc* CActionView::GetDocument() const
 }
 #endif
 
+
+// ActionChangeTypeDlg dialog
+
+class CActionChangeTypeDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CActionChangeTypeDlg)
+
+public:
+	CActionChangeTypeDlg(CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CActionChangeTypeDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ACTION_CHANGE_TYPE };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+public:
+	CListBox m_type_list;
+};
