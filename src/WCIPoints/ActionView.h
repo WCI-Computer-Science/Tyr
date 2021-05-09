@@ -82,6 +82,9 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
-public:
+private:
 	CListBox m_type_list;
+public:
+	int m_type;
+	afx_msg void OnLbnSelchangeActionTypeList();
 };

@@ -11,6 +11,8 @@
 
 #include "afxdialogex.h"
 
+#include <string>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -146,6 +148,16 @@ void CActionView::OnBnClickedActionTypeChange()
 {
 	CActionChangeTypeDlg actionChangeTypeDlg;
 	if (actionChangeTypeDlg.DoModal() == IDOK) {
+		m_type = actionChangeTypeDlg.m_type;
+
+		if (m_type == 0)
+			m_type_static.SetWindowTextW(_T("Athletics"));
+		else if (m_type == 1)
+			m_type_static.SetWindowTextW(_T("Academics"));
+		else if (m_type == 2)
+			m_type_static.SetWindowTextW(_T("Activities"));
+
+		m_title.Invalidate();
 	}
 }
 
@@ -172,6 +184,7 @@ BOOL CActionChangeTypeDlg::OnInitDialog() {
 	m_type_list.AddString(_T("Athletics"));
 	m_type_list.AddString(_T("Academics"));
 	m_type_list.AddString(_T("Activities"));
+	m_type_list.SetCurSel(0);
 
 	return TRUE;
 }
@@ -184,7 +197,13 @@ void CActionChangeTypeDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CActionChangeTypeDlg, CDialogEx)
+	ON_LBN_SELCHANGE(IDC_ACTION_TYPE_LIST, &CActionChangeTypeDlg::OnLbnSelchangeActionTypeList)
 END_MESSAGE_MAP()
 
 
 // ActionChangeTypeDlg message handlers
+
+void CActionChangeTypeDlg::OnLbnSelchangeActionTypeList()
+{
+	m_type = m_type_list.GetCurSel() == LB_ERR ? 0 : m_type_list.GetCurSel();
+}
