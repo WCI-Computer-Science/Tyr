@@ -50,6 +50,10 @@ private:
 	int m_type;
 	CFont m_type_staticFont;
 	CStatic m_type_static;
+
+	CListBox m_action_list;
+
+	void loadTypeData();
 public:
 	afx_msg void OnBnClickedActionTypeChange();
 };

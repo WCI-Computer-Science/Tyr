@@ -190,7 +190,6 @@
     <ClInclude Include="Action.h" />
     <ClInclude Include="ActionView.h" />
     <ClInclude Include="AwardView.h" />
-    <ClInclude Include="CActionAddDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="pch.h" />
@@ -205,7 +204,6 @@
     <ClCompile Include="Action.cpp" />
     <ClCompile Include="ActionView.cpp" />
     <ClCompile Include="AwardView.cpp" />
-    <ClCompile Include="CActionAddDlg.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

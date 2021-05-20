@@ -46,6 +46,7 @@ void CActionView::DoDataExchange(CDataExchange* pDX)
 	CFormView::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_TITLE, m_title);
 	DDX_Control(pDX, IDC_ACTION_TYPE_STATIC, m_type_static);
+	DDX_Control(pDX, IDC_ACTION_LIST, m_action_list);
 }
 
 BOOL CActionView::PreCreateWindow(CREATESTRUCT& cs)
@@ -59,6 +60,8 @@ BOOL CActionView::PreCreateWindow(CREATESTRUCT& cs)
 void CActionView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
+
+	loadTypeData();
 
 	m_titleFont.CreateFontW(
 		20,
@@ -77,13 +80,6 @@ void CActionView::OnInitialUpdate()
 		_T("Arial")
 	);
 	m_title.SetFont(&m_titleFont);
-
-	if (m_type == 0)
-		m_type_static.SetWindowTextW(_T("Athletics"));
-	else if (m_type == 1)
-		m_type_static.SetWindowTextW(_T("Academics"));
-	else if (m_type == 2)
-		m_type_static.SetWindowTextW(_T("Activities"));
 
 	m_type_staticFont.CreateFontW(
 		50,
@@ -141,6 +137,22 @@ CWCIPointsDoc* CActionView::GetDocument() const // non-debug version is inline
 #endif //_DEBUG
 
 
+// Load data for each type of action
+
+void CActionView::loadTypeData() {
+
+	// Title
+	if (m_type == 0)
+		m_type_static.SetWindowTextW(_T("Athletics"));
+	else if (m_type == 1)
+		m_type_static.SetWindowTextW(_T("Academics"));
+	else if (m_type == 2)
+		m_type_static.SetWindowTextW(_T("Activities"));
+
+
+}
+
+
 // CActionView message handlers
 
 
@@ -149,15 +161,8 @@ void CActionView::OnBnClickedActionTypeChange()
 	CActionChangeTypeDlg actionChangeTypeDlg;
 	if (actionChangeTypeDlg.DoModal() == IDOK) {
 		m_type = actionChangeTypeDlg.m_type;
-
-		if (m_type == 0)
-			m_type_static.SetWindowTextW(_T("Athletics"));
-		else if (m_type == 1)
-			m_type_static.SetWindowTextW(_T("Academics"));
-		else if (m_type == 2)
-			m_type_static.SetWindowTextW(_T("Activities"));
-
-		m_title.Invalidate();
+		loadTypeData();
+		Invalidate();
 	}
 }
 
