@@ -51,7 +51,7 @@ private:
 	CFont m_type_staticFont;
 	CStatic m_type_static;
 
-	LVCOLUMN m_col_id, m_col_name, m_col_points;
+	LVCOLUMN m_col_name, m_col_points;
 	CListCtrl m_action_list;
 
 	void loadTypeData();

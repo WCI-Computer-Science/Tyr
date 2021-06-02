@@ -7,6 +7,8 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 
+#include <string>
+
 #include "Action.h"
 
 
@@ -87,7 +89,7 @@ std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con) {
 	std::auto_ptr<sql::ResultSet> res;
 
 	res.reset(stmt->executeQuery(
-		"SELECT a.actn_id, a.type, a.name, a.points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL"
+		"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL"
 	));
 	return res;
 }
@@ -96,10 +98,8 @@ std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, int type) {
 	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 
-	std::string s_type(1, type + '0');
-
 	res.reset(stmt->executeQuery(
-		"SELECT a.actn_id, a.name, a.points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=" + s_type
+		"SELECT a.actn_id id, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=" + std::to_string(type)
 	));
 	return res;
 }

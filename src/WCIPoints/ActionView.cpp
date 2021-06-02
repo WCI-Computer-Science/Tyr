@@ -21,6 +21,8 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 
+#include <string>
+
 #include "Action.h"
 
 #ifdef _DEBUG
@@ -71,26 +73,26 @@ void CActionView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
 
+	m_action_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
 	// Insert dummy column so LVCFMT_FIXED_WIDTH works properly (see Remarks of LVCOLUMN struct)
 	m_action_list.InsertColumn(0, &LVCOLUMN());
 
-	m_col_id.mask = m_col_name.mask = m_col_points.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+	m_col_name.mask = m_col_points.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 
-	m_col_id.fmt = m_col_name.fmt = m_col_points.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
+	m_col_name.fmt = m_col_points.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
 
-	m_col_id.cx = 100;
 	m_col_name.cx = 400;
 	m_col_points.cx = 100;
 
-	m_col_id.pszText = _T("ID");
 	m_col_name.pszText = _T("Action Name");
 	m_col_points.pszText = _T("Points");
 
-	m_action_list.InsertColumn(1, &m_col_id);
-	m_action_list.InsertColumn(2, &m_col_name);
-	m_action_list.InsertColumn(3, &m_col_points);
+	m_action_list.InsertColumn(1, &m_col_name);
+	m_action_list.InsertColumn(2, &m_col_points);
 
 	m_action_list.DeleteColumn(0);
+
 
 	loadTypeData();
 
@@ -180,6 +182,8 @@ void CActionView::loadTypeData() {
 	else if (m_type == 2)
 		m_type_static.SetWindowTextW(_T("Activities"));
 
+	m_action_list.DeleteAllItems();
+
 	// Fetch data from MySQL
 	try {
 		sql::Driver* driver = get_driver_instance();
@@ -187,12 +191,23 @@ void CActionView::loadTypeData() {
 		con->setSchema("points");
 		
 		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type);
+		int i = 0;
 		while (res->next()) {
+			std::string name = res->getString("name");
+			m_action_list.InsertItem(i, CString(name.c_str()));
 
+			std::string points = res->getString("points");
+			m_action_list.SetItemText(i, 1, CString(points.c_str()));
+
+			m_action_list.SetItemData(i, res->getInt("id"));
+
+			++i;
 		}
 	}
 	catch (sql::SQLException& e) {
 		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
 	}
 }
 
