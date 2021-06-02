@@ -22,8 +22,8 @@
 #define IDC_ACTION_TYPE_STATIC          1010
 #define IDC_ACTION_TYPE_CHANGE          1011
 #define IDC_ACTION_TYPE_LIST            1012
-#define IDC_LIST2                       1014
 #define IDC_ACTION_LIST                 1014
+#define IDC_LIST1                       1015
 #define ID_STUDENT_ADD                  32771
 #define ID_STUDENT_EDIT                 32772
 #define ID_ACTIONS_AD                   32773
@@ -43,7 +43,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        324
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

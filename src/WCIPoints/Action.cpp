@@ -1,16 +1,8 @@
 #include "pch.h"
 #include "afxwinappex.h"
 
-#include <stdlib.h>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <vector>
-
 #include "mysql_connection.h"
 
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
@@ -89,12 +81,25 @@ void Action::edit_points(sql::Connection* con, int id, int points) {
 }
 
 
+// Get actions
 std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con) {
 	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 
 	res.reset(stmt->executeQuery(
 		"SELECT a.actn_id, a.type, a.name, a.points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL"
+	));
+	return res;
+}
+
+std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, int type) {
+	std::auto_ptr<sql::Statement> stmt(con->createStatement());
+	std::auto_ptr<sql::ResultSet> res;
+
+	std::string s_type(1, type + '0');
+
+	res.reset(stmt->executeQuery(
+		"SELECT a.actn_id, a.name, a.points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=" + s_type
 	));
 	return res;
 }

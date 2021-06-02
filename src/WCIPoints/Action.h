@@ -13,5 +13,6 @@ namespace Action {
 	void edit_name(sql::Connection* con, int id, CString name);
 	void edit_points(sql::Connection* con, int id, int points);
 	
-	std::auto_ptr<sql::ResultSet> get(sql::Connection* con);
+	std::auto_ptr<sql::ResultSet> get(sql::Connection* con); // Get all actions
+	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, int type); // Get actions of a specific type
 }

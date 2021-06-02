@@ -13,6 +13,16 @@
 
 #include <string>
 
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+#include "Action.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -61,10 +71,31 @@ void CActionView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
 
+	// Insert dummy column so LVCFMT_FIXED_WIDTH works properly (see Remarks of LVCOLUMN struct)
+	m_action_list.InsertColumn(0, &LVCOLUMN());
+
+	m_col_id.mask = m_col_name.mask = m_col_points.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+
+	m_col_id.fmt = m_col_name.fmt = m_col_points.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
+
+	m_col_id.cx = 100;
+	m_col_name.cx = 400;
+	m_col_points.cx = 100;
+
+	m_col_id.pszText = _T("ID");
+	m_col_name.pszText = _T("Action Name");
+	m_col_points.pszText = _T("Points");
+
+	m_action_list.InsertColumn(1, &m_col_id);
+	m_action_list.InsertColumn(2, &m_col_name);
+	m_action_list.InsertColumn(3, &m_col_points);
+
+	m_action_list.DeleteColumn(0);
+
 	loadTypeData();
 
 	m_titleFont.CreateFontW(
-		20,
+		27,
 		0,
 		0,
 		0,
@@ -149,7 +180,20 @@ void CActionView::loadTypeData() {
 	else if (m_type == 2)
 		m_type_static.SetWindowTextW(_T("Activities"));
 
+	// Fetch data from MySQL
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+		
+		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type);
+		while (res->next()) {
 
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+	}
 }
 
 
@@ -175,6 +219,7 @@ IMPLEMENT_DYNAMIC(CActionChangeTypeDlg, CDialogEx)
 
 CActionChangeTypeDlg::CActionChangeTypeDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_ACTION_CHANGE_TYPE, pParent)
+	, m_type(0)
 {
 
 }

@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "Student.h"
 
 #include <stdlib.h>
 #include <iostream>
@@ -15,3 +14,4 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 
+#include "Student.h"
