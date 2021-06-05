@@ -72,6 +72,8 @@ BOOL CActionView::PreCreateWindow(CREATESTRUCT& cs)
 void CActionView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
+	// Default created with WS_EX_CLIENTEDGE for some reason
+	ModifyStyleEx(WS_EX_CLIENTEDGE, 0);
 
 	m_action_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 

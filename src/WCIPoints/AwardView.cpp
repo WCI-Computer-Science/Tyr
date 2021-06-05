@@ -51,6 +51,8 @@ BOOL CAwardView::PreCreateWindow(CREATESTRUCT& cs)
 void CAwardView::OnInitialUpdate()
 {
 	CFormView::OnInitialUpdate();
+	// Default created with WS_EX_CLIENTEDGE for some reason
+	ModifyStyleEx(WS_EX_CLIENTEDGE, 0);
 	GetParentFrame()->RecalcLayout();
 	ResizeParentToFit();
 
