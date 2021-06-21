@@ -5,9 +5,8 @@
 #include "framework.h"
 
 #include "WCIPoints.h"
-
 #include "WCIPointsDoc.h"
-#include "ActionView.h"
+#include "CEditDlg.h"
 
 #include "afxdialogex.h"
 
@@ -22,8 +21,11 @@
 #include <cppconn/prepared_statement.h>
 
 #include <string>
+#include <iostream>
 
 #include "Action.h"
+
+#include "ActionView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -37,6 +39,7 @@ BEGIN_MESSAGE_MAP(CActionView, CFormView)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONUP()
 	ON_BN_CLICKED(IDC_ACTION_TYPE_CHANGE, &CActionView::OnBnClickedActionTypeChange)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_ACTION_LIST, &CActionView::OnLvnColumnclickActionList)
 END_MESSAGE_MAP()
 
 
@@ -84,8 +87,8 @@ void CActionView::OnInitialUpdate()
 
 	m_col_name.fmt = m_col_points.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
 
-	m_col_name.cx = 400;
-	m_col_points.cx = 100;
+	m_col_name.cx = 450;
+	m_col_points.cx = 150;
 
 	m_col_name.pszText = _T("Action Name");
 	m_col_points.pszText = _T("Points");
@@ -136,7 +139,6 @@ void CActionView::OnInitialUpdate()
 
 	GetParentFrame()->RecalcLayout();
 	ResizeParentToFit();
-
 }
 
 void CActionView::OnRButtonUp(UINT /* nFlags */, CPoint point)
@@ -216,7 +218,7 @@ void CActionView::loadTypeData() {
 
 // CActionView message handlers
 
-
+// Change Action type
 void CActionView::OnBnClickedActionTypeChange()
 {
 	CActionChangeTypeDlg actionChangeTypeDlg;
@@ -227,6 +229,44 @@ void CActionView::OnBnClickedActionTypeChange()
 	}
 }
 
+// Edit Action attribute (click on column)
+void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	if (m_action_list.GetSelectionMark() == -1) {
+		*pResult = 0;
+		return;
+	}
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		CString title = _T("Edit Action");
+
+		if (pNMLV->iSubItem == 0) {
+			CString caption = _T("Edit Action Name");
+			CString value = m_action_list.GetItemText(m_action_list.GetSelectionMark(), 0);
+
+			CEditStringDlg editStringDlg(title, caption, value);
+			if (editStringDlg.DoModal() == IDOK) {
+				// Update database
+				Action::edit_name(con.get(), m_action_list.GetItemData(m_action_list.GetSelectionMark()), editStringDlg.m_value);
+				// Update UI
+				m_action_list.SetItemText(m_action_list.GetSelectionMark(), 0, editStringDlg.m_value);
+				Invalidate();
+			}
+		}
+		*pResult = 0;
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
 
 
 
@@ -245,7 +285,8 @@ CActionChangeTypeDlg::~CActionChangeTypeDlg()
 {
 }
 
-BOOL CActionChangeTypeDlg::OnInitDialog() {
+BOOL CActionChangeTypeDlg::OnInitDialog()
+{
 	CDialog::OnInitDialog();
 
 	m_type_list.AddString(_T("Athletics"));

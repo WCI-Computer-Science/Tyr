@@ -54,7 +54,7 @@ void CStudentView::OnInitialUpdate()
 	ModifyStyleEx(WS_EX_CLIENTEDGE, 0);
 
 	GetParentFrame()->RecalcLayout();
-	ResizeParentToFit();
+	ResizeParentToFit(FALSE);
 }
 
 void CStudentView::OnRButtonUp(UINT /* nFlags */, CPoint point)

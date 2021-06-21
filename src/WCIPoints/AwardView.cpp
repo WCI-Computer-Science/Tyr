@@ -53,9 +53,9 @@ void CAwardView::OnInitialUpdate()
 	CFormView::OnInitialUpdate();
 	// Default created with WS_EX_CLIENTEDGE for some reason
 	ModifyStyleEx(WS_EX_CLIENTEDGE, 0);
+
 	GetParentFrame()->RecalcLayout();
 	ResizeParentToFit();
-
 }
 
 void CAwardView::OnRButtonUp(UINT /* nFlags */, CPoint point)

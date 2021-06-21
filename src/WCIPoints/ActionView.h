@@ -57,6 +57,7 @@ private:
 	void loadTypeData();
 public:
 	afx_msg void OnBnClickedActionTypeChange();
+	afx_msg void OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult);
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
@@ -65,6 +66,7 @@ inline CWCIPointsDoc* CActionView::GetDocument() const
 	return reinterpret_cast<CWCIPointsDoc*>(m_pDocument);
 }
 #endif
+
 
 
 // ActionChangeTypeDlg dialog
