@@ -53,11 +53,14 @@ private:
 
 	LVCOLUMN m_col_name, m_col_points;
 	CListCtrl m_action_list;
+	int selectionMark;
 
 	void loadTypeData();
 public:
 	afx_msg void OnBnClickedActionTypeChange();
 	afx_msg void OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedRemoveAction();
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp

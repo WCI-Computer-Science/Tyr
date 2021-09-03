@@ -11,6 +11,7 @@
 #include "afxdialogex.h"
 
 #include <string>
+#include <iostream>
 
 #include "mysql_connection.h"
 
@@ -19,9 +20,6 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
-
-#include <string>
-#include <iostream>
 
 #include "Action.h"
 
@@ -40,6 +38,8 @@ BEGIN_MESSAGE_MAP(CActionView, CFormView)
 	ON_WM_RBUTTONUP()
 	ON_BN_CLICKED(IDC_ACTION_TYPE_CHANGE, &CActionView::OnBnClickedActionTypeChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_ACTION_LIST, &CActionView::OnLvnColumnclickActionList)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_ACTION_LIST, &CActionView::OnLvnItemchangedActionList)
+	ON_BN_CLICKED(IDC_REMOVE_ACTION, &CActionView::OnBnClickedRemoveAction)
 END_MESSAGE_MAP()
 
 
@@ -47,6 +47,7 @@ END_MESSAGE_MAP()
 CActionView::CActionView() noexcept
 	: CFormView(IDD_ACTION)
 	, m_type(0)
+	, selectionMark(-1)
 {
 	// TODO: add construction code here
 
@@ -218,7 +219,7 @@ void CActionView::loadTypeData() {
 
 // CActionView message handlers
 
-// Change Action type
+// Change Action type (click on change type button)
 void CActionView::OnBnClickedActionTypeChange()
 {
 	CActionChangeTypeDlg actionChangeTypeDlg;
@@ -229,15 +230,14 @@ void CActionView::OnBnClickedActionTypeChange()
 	}
 }
 
-// Edit Action attribute (click on column)
+// Edit Action attribute (click on list control column)
 void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	*pResult = 0;
 
-	if (m_action_list.GetSelectionMark() == -1) {
-		*pResult = 0;
+	if (m_action_list.GetSelectionMark() == -1)
 		return;
-	}
 
 	try {
 		sql::Driver* driver = get_driver_instance();
@@ -247,7 +247,7 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 		CString title = _T("Edit Action");
 
 		if (pNMLV->iSubItem == 0) {
-			CString caption = _T("Edit Action Name");
+			CString caption = _T("Edit Name");
 			CString value = m_action_list.GetItemText(m_action_list.GetSelectionMark(), 0);
 
 			CEditStringDlg editStringDlg(title, caption, value);
@@ -259,7 +259,21 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 				Invalidate();
 			}
 		}
-		*pResult = 0;
+		else {
+			CString caption = _T("Edit Points");
+			int value = _ttoi(m_action_list.GetItemText(m_action_list.GetSelectionMark(), 1));
+
+			CEditIntDlg editIntDlg(title, caption, value);
+			if (editIntDlg.DoModal() == IDOK) {
+				// Update database
+				Action::edit_points(con.get(), m_action_list.GetItemData(m_action_list.GetSelectionMark()), editIntDlg.m_value);
+				// Update UI
+				CString update;
+				update.Format(_T("%d"), editIntDlg.m_value);
+				m_action_list.SetItemText(m_action_list.GetSelectionMark(), 1, update);
+				Invalidate();
+			}
+		}
 	}
 	catch (sql::SQLException& e) {
 		// Exception occured
@@ -267,6 +281,50 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 		AfxMessageBox(CString(err.c_str()));
 	}
 }
+
+// Keep track of current selection for other functions (select row in list control)
+void CActionView::OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED)
+			selectionMark = pNMLV->iItem;
+		else
+			selectionMark = -1;
+	}
+
+	*pResult = 0;
+}
+
+// Remove an action, or archive it if unable
+void CActionView::OnBnClickedRemoveAction() //TODO: fix this, see if i can directly selection mark instead of storing it
+{
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		if (Action::autoremove(con.get(), m_action_list.GetItemData(selectionMark))) {
+			loadTypeData();
+			AfxMessageBox(_T("Action deleted."));
+			m_action_list.Invalidate();
+		}
+		else {
+			loadTypeData();
+			AfxMessageBox(_T("Action moved to archive."));
+			m_action_list.Invalidate();
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
 
 
 
