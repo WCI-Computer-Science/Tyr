@@ -42,6 +42,7 @@ BEGIN_MESSAGE_MAP(CActionView, CFormView)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_ACTION_LIST, &CActionView::OnLvnItemchangedActionList)
 	ON_BN_CLICKED(IDC_REMOVE_ACTION, &CActionView::OnBnClickedRemoveAction)
 	ON_BN_CLICKED(IDC_CREATE_ACTION, &CActionView::OnBnClickedCreateAction)
+	ON_BN_CLICKED(IDC_ACCESS_ARCHIVE, &CActionView::OnBnClickedAccessArchive)
 END_MESSAGE_MAP()
 
 
@@ -197,7 +198,7 @@ void CActionView::loadTypeData() {
 		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
 		con->setSchema("points");
 		
-		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type);
+		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type, false);
 		int i = 0;
 		while (res->next()) {
 			std::string name = res->getString("name");
@@ -291,7 +292,9 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	catch (sql::SQLException& e) {
 		// Exception occured
-		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		std::string err;
+		if (e.getErrorCode() == 1062) err = "An action with that name already exists!"; // If duplicate key name
+		else err = "Something went wrong...\nError: " + (std::string)e.what();
 		AfxMessageBox(CString(err.c_str()));
 	}
 }
@@ -351,7 +354,105 @@ void CActionView::OnBnClickedRemoveAction()
 		}
 		else {
 			loadTypeData();
-			AfxMessageBox(_T("Action moved to archive."));
+			AfxMessageBox(_T("Students have participated in this action in the past!\nAction moved to archive instead."));
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+
+	selectionMark = -1;
+}
+
+// Access the archive menu
+void CActionView::OnBnClickedAccessArchive()
+{
+	CActionArchiveDlg actionArchiveDlg(m_type);
+	actionArchiveDlg.DoModal();
+	loadTypeData();
+}
+
+
+
+
+
+
+// Action Archive dialog
+
+IMPLEMENT_DYNAMIC(CActionArchiveDlg, CDialogEx)
+
+CActionArchiveDlg::CActionArchiveDlg(int type, CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_ACTION_ARCHIVE, pParent)
+	, m_type(type)
+	, selectionMark(-1)
+{
+
+}
+
+CActionArchiveDlg::~CActionArchiveDlg()
+{
+}
+
+BOOL CActionArchiveDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	m_action_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+	m_action_list.InsertColumn(0, _T("Action"), LVCFMT_LEFT, 450, 0);
+
+	m_titleFont.CreateFontW(
+		27,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	loadTypeData();
+
+	m_title.SetFont(&m_titleFont);
+
+	return TRUE;
+}
+
+// Load data for type of action
+void CActionArchiveDlg::loadTypeData() {
+	// Title
+	if (m_type == 0)
+		m_title.SetWindowTextW(_T("Athletics Archive"));
+	else if (m_type == 1)
+		m_title.SetWindowTextW(_T("Academics Archive"));
+	else if (m_type == 2)
+		m_title.SetWindowTextW(_T("Activities Archive"));
+
+	m_action_list.DeleteAllItems();
+
+	// Fetch data from MySQL
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type, true);
+		int i = 0;
+		while (res->next()) {
+			std::string msg = (std::string)res->getString("name") + "    (" + (std::string)res->getString("points") + " points)";
+			m_action_list.InsertItem(i, CString(msg.c_str()));
+
+			m_action_list.SetItemData(i, res->getInt("id"));
+
+			++i;
 		}
 	}
 	catch (sql::SQLException& e) {
@@ -360,6 +461,95 @@ void CActionView::OnBnClickedRemoveAction()
 		AfxMessageBox(CString(err.c_str()));
 	}
 }
+
+void CActionArchiveDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_ACTION_LIST, m_action_list);
+}
+
+
+BEGIN_MESSAGE_MAP(CActionArchiveDlg, CDialogEx)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_ACTION_LIST, &CActionArchiveDlg::OnLvnItemchangedActionList)
+	ON_BN_CLICKED(IDC_UNARCHIVE_ACTION, &CActionArchiveDlg::OnBnClickedUnarchiveAction)
+	ON_BN_CLICKED(IDC_REMOVE_ACTION, &CActionArchiveDlg::OnBnClickedRemoveAction)
+END_MESSAGE_MAP()
+
+
+// CActionArchiveDlg message handlers
+
+// Keep track of current selection for other functions (select row in list control)
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
+void CActionArchiveDlg::OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED)
+			selectionMark = pNMLV->iItem;
+		else
+			selectionMark = -1;
+	}
+
+	*pResult = 0;
+}
+
+// Unarchive an action
+void CActionArchiveDlg::OnBnClickedUnarchiveAction()
+{
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		Action::unarchive(con.get(), m_action_list.GetItemData(selectionMark));
+		loadTypeData();
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+
+	selectionMark = -1;
+}
+
+// Delete action from archive, or notify user if not possible
+void CActionArchiveDlg::OnBnClickedRemoveAction()
+{
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		if (Action::autoremove(con.get(), m_action_list.GetItemData(selectionMark))) {
+			loadTypeData();
+			AfxMessageBox(_T("Action successfully deleted."));
+		}
+		else {
+			AfxMessageBox(_T(
+				"Students have participated in this action in the past!\n"
+				"You cannot delete this action unless you delete those students.\n"
+				"It's recommended to just leave this action here."
+			));
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+
+	selectionMark = -1;
+}
+
+
 
 
 
@@ -413,6 +603,8 @@ void CActionChangeTypeDlg::OnLbnSelchangeActionTypeList()
 
 
 
+
+
 // ActionCreateDlg dialog
 
 IMPLEMENT_DYNAMIC(CActionCreateDlg, CDialogEx)
@@ -445,5 +637,4 @@ END_MESSAGE_MAP()
 
 
 // ActionCreateDlg message handlers
-
 

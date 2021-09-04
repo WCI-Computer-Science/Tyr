@@ -16,6 +16,6 @@ namespace Action {
 	void edit_name(sql::Connection* con, int id, CString name);
 	void edit_points(sql::Connection* con, int id, int points);
 	
-	std::auto_ptr<sql::ResultSet> get(sql::Connection* con); // Get all actions
-	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, int type); // Get actions of a specific type
+	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, bool archive); // Get all actions, and see archived if archive is set to true
+	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, int type, bool archive); // Get actions of a specific type, and see archived if archive is set to true
 }

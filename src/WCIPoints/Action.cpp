@@ -120,23 +120,34 @@ void Action::edit_points(sql::Connection* con, int id, int points) {
 
 
 // Get actions
-std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con) {
+std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, bool archive) {
 	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 
-	res.reset(stmt->executeQuery(
-		"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL"
-	));
+	if (!archive)
+		res.reset(stmt->executeQuery(
+			"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL"
+		));
+	else
+		res.reset(stmt->executeQuery(
+			"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a INNER JOIN action_archive a_a ON a_a.actn_id=a.actn_id"
+		));
+
 	return res;
 }
 
-std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, int type) {
+std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, int type, bool archive) {
 	std::auto_ptr<sql::PreparedStatement> pstmt;
 	std::auto_ptr<sql::ResultSet> res;
 
-	pstmt.reset(con->prepareStatement(
-		"SELECT a.actn_id id, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=?"
-	));
+	if (!archive)
+		pstmt.reset(con->prepareStatement(
+			"SELECT a.actn_id id, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=?"
+		));
+	else
+		pstmt.reset(con->prepareStatement(
+			"SELECT a.actn_id id, a.name name, a.points points FROM action a INNER JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a.type=?"
+		));
 
 	pstmt->setInt(1, type);
 	

@@ -20,6 +20,7 @@
 #define IDD_ACTION_CHANGE_TYPE          322
 #define IDD_EDIT_VALUE                  324
 #define IDD_ACTION_CREATE               328
+#define IDD_ACTION_ARCHIVE              330
 #define IDC_TITLE                       1008
 #define IDC_ACTION_TYPE_STATIC          1010
 #define IDC_ACTION_TYPE_CHANGE          1011
@@ -30,8 +31,10 @@
 #define IDC_REMOVE_ACTION               1019
 #define IDC_CREATE_ACTION               1020
 #define IDC_ACTION_NAME                 1021
-#define IDC_EDIT2                       1022
 #define IDC_ACTION_VALUE                1022
+#define IDC_UNARCHIVE_ACTION            1026
+#define IDC_                            1028
+#define IDC_ACCESS_ARCHIVE              1028
 #define ID_STUDENT_ADD                  32771
 #define ID_STUDENT_EDIT                 32772
 #define ID_ACTIONS_AD                   32773
@@ -49,9 +52,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        330
+#define _APS_NEXT_RESOURCE_VALUE        332
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

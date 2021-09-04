@@ -62,6 +62,7 @@ public:
 	afx_msg void OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedCreateAction();
 	afx_msg void OnBnClickedRemoveAction();
+	afx_msg void OnBnClickedAccessArchive();
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
@@ -70,6 +71,47 @@ inline CWCIPointsDoc* CActionView::GetDocument() const
 	return reinterpret_cast<CWCIPointsDoc*>(m_pDocument);
 }
 #endif
+
+
+
+// Action Archive dialog
+
+class CActionArchiveDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CActionArchiveDlg)
+
+public:
+	CActionArchiveDlg(int type, CWnd* pParent = nullptr);
+	virtual ~CActionArchiveDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ACTION_ARCHIVE };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_type;
+
+	CListCtrl m_action_list;
+	int selectionMark;
+
+	void loadTypeData();
+public:
+	afx_msg void OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedUnarchiveAction();
+	afx_msg void OnBnClickedRemoveAction();
+};
+
+
+
 
 
 
