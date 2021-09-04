@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "framework.h"
+#include "custommfc.h"
 
 #include "WCIPoints.h"
 #include "WCIPointsDoc.h"
@@ -40,6 +41,7 @@ BEGIN_MESSAGE_MAP(CActionView, CFormView)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_ACTION_LIST, &CActionView::OnLvnColumnclickActionList)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_ACTION_LIST, &CActionView::OnLvnItemchangedActionList)
 	ON_BN_CLICKED(IDC_REMOVE_ACTION, &CActionView::OnBnClickedRemoveAction)
+	ON_BN_CLICKED(IDC_CREATE_ACTION, &CActionView::OnBnClickedCreateAction)
 END_MESSAGE_MAP()
 
 
@@ -236,7 +238,7 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	*pResult = 0;
 
-	if (m_action_list.GetSelectionMark() == -1)
+	if (selectionMark == -1)
 		return;
 
 	try {
@@ -248,29 +250,41 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 
 		if (pNMLV->iSubItem == 0) {
 			CString caption = _T("Edit Name");
-			CString value = m_action_list.GetItemText(m_action_list.GetSelectionMark(), 0);
+			CString value = m_action_list.GetItemText(selectionMark, 0);
 
 			CEditStringDlg editStringDlg(title, caption, value);
 			if (editStringDlg.DoModal() == IDOK) {
+				// Check to see if value is invalid (name should be at least 1 character, at most 64 characters)
+				if (editStringDlg.m_value.GetLength() < 1 || editStringDlg.m_value.GetLength() > 64) {
+					AfxMessageBox(_T("Name should be from 1 to 64 characters long"));
+					return;
+				}
+
 				// Update database
-				Action::edit_name(con.get(), m_action_list.GetItemData(m_action_list.GetSelectionMark()), editStringDlg.m_value);
+				Action::edit_name(con.get(), m_action_list.GetItemData(selectionMark), editStringDlg.m_value);
 				// Update UI
-				m_action_list.SetItemText(m_action_list.GetSelectionMark(), 0, editStringDlg.m_value);
+				m_action_list.SetItemText(selectionMark, 0, editStringDlg.m_value);
 				Invalidate();
 			}
 		}
 		else {
 			CString caption = _T("Edit Points");
-			int value = _ttoi(m_action_list.GetItemText(m_action_list.GetSelectionMark(), 1));
+			int value = _ttoi(m_action_list.GetItemText(selectionMark, 1));
 
 			CEditIntDlg editIntDlg(title, caption, value);
 			if (editIntDlg.DoModal() == IDOK) {
+				// Check to see if value is invalid (action point value should be from 1 to 10)
+				if (editIntDlg.m_value < 1 || editIntDlg.m_value > 10) {
+					AfxMessageBox(_T("Please enter a point value between 1 and 10."));
+					return;
+				}
+
 				// Update database
-				Action::edit_points(con.get(), m_action_list.GetItemData(m_action_list.GetSelectionMark()), editIntDlg.m_value);
+				Action::edit_points(con.get(), m_action_list.GetItemData(selectionMark), editIntDlg.m_value);
 				// Update UI
 				CString update;
 				update.Format(_T("%d"), editIntDlg.m_value);
-				m_action_list.SetItemText(m_action_list.GetSelectionMark(), 1, update);
+				m_action_list.SetItemText(selectionMark, 1, update);
 				Invalidate();
 			}
 		}
@@ -283,6 +297,7 @@ void CActionView::OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Keep track of current selection for other functions (select row in list control)
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
 void CActionView::OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
@@ -296,8 +311,31 @@ void CActionView::OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
+// Create new Action (click on create button)
+void CActionView::OnBnClickedCreateAction()
+{
+	CActionCreateDlg actionCreateDlg;
+	if (actionCreateDlg.DoModal() == IDOK) {
+		try {
+			sql::Driver* driver = get_driver_instance();
+			std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+			con->setSchema("points");
+
+			Action::add(con.get(), m_type, actionCreateDlg.m_name, actionCreateDlg.m_points);
+			loadTypeData();
+		}
+		catch (sql::SQLException& e) {
+			// Exception occured
+			std::string err;
+			if (e.getErrorCode() == 1062) err = "An action with that name already exists!"; // If duplicate key name
+			else err = "Something went wrong...\nError: " + (std::string)e.what();
+			AfxMessageBox(CString(err.c_str()));
+		}
+	}
+}
+
 // Remove an action, or archive it if unable
-void CActionView::OnBnClickedRemoveAction() //TODO: fix this, see if i can directly selection mark instead of storing it
+void CActionView::OnBnClickedRemoveAction()
 {
 	if (selectionMark == -1)
 		return;
@@ -310,12 +348,10 @@ void CActionView::OnBnClickedRemoveAction() //TODO: fix this, see if i can direc
 		if (Action::autoremove(con.get(), m_action_list.GetItemData(selectionMark))) {
 			loadTypeData();
 			AfxMessageBox(_T("Action deleted."));
-			m_action_list.Invalidate();
 		}
 		else {
 			loadTypeData();
 			AfxMessageBox(_T("Action moved to archive."));
-			m_action_list.Invalidate();
 		}
 	}
 	catch (sql::SQLException& e) {
@@ -373,3 +409,41 @@ void CActionChangeTypeDlg::OnLbnSelchangeActionTypeList()
 {
 	m_type = m_type_list.GetCurSel() == LB_ERR ? 0 : m_type_list.GetCurSel();
 }
+
+
+
+
+// ActionCreateDlg dialog
+
+IMPLEMENT_DYNAMIC(CActionCreateDlg, CDialogEx)
+
+CActionCreateDlg::CActionCreateDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_ACTION_CREATE, pParent)
+	, m_name(_T(""))
+	, m_points(0)
+{
+
+}
+
+CActionCreateDlg::~CActionCreateDlg()
+{
+}
+
+void CActionCreateDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_ACTION_NAME, m_name);
+	DDV_MaxChars(pDX, m_name, 64);
+	DDV_MinChars(pDX, m_name, 1);
+	DDX_Text(pDX, IDC_ACTION_VALUE, m_points);
+	DDV_MinMaxInt(pDX, m_points, 1, 10);
+}
+
+
+BEGIN_MESSAGE_MAP(CActionCreateDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// ActionCreateDlg message handlers
+
+

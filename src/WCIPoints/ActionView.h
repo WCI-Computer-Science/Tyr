@@ -60,6 +60,7 @@ public:
 	afx_msg void OnBnClickedActionTypeChange();
 	afx_msg void OnLvnColumnclickActionList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedCreateAction();
 	afx_msg void OnBnClickedRemoveAction();
 };
 
@@ -97,4 +98,30 @@ private:
 public:
 	int m_type;
 	afx_msg void OnLbnSelchangeActionTypeList();
+};
+
+
+
+// ActionCreateDlg dialog
+
+class CActionCreateDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CActionCreateDlg)
+
+public:
+	CActionCreateDlg(CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CActionCreateDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ACTION_CREATE };
+#endif
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+public:
+	CString m_name;
+	int m_points;
 };

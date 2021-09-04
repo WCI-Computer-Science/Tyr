@@ -54,6 +54,9 @@
     <ClInclude Include="CEditDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="custommfc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WCIPoints.cpp">
@@ -84,6 +87,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CEditDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="custommfc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

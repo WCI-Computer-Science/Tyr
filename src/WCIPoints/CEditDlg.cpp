@@ -76,7 +76,6 @@ void CEditIntDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_ACTION_ATTR_STATIC, m_caption);
 	DDX_Text(pDX, IDC_EDIT_ACTION_ATTR, m_value);
-	DDV_MinMaxInt(pDX, m_value, 1, 10); // Only allow action to be up to 10 points
 }
 
 

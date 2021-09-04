@@ -115,7 +115,12 @@ CREATE TABLE compound_cnst (
 
  DELIMITER //
 
-/* Calculation for basic constraint type 1 (summing action points) */
+/* 
+ * Calculation for basic constraint type 1 (summing action points)
+ * p_stdt_id: student id, corresponds to stdt_id in student table
+ * p_actn_type: action type, corresponds to type in action table
+ * p_mx: max yearly points, corresponds to _m_ from DOCUMENTATION
+ */
 CREATE PROCEDURE ACTN_SUM (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_mx TINYINT UNSIGNED, OUT result TINYINT UNSIGNED)
 BEGIN
 	SELECT COALESCE(SUM(res.points), 0) INTO result
@@ -128,7 +133,10 @@ BEGIN
 END;
 //
 
-/* Calculation for basic constraint type 2 (years in high school) */
+/*
+ * Calculation for basic constraint type 2 (years in high school)
+ * p_stdt_id: student id
+ */
 CREATE PROCEDURE YEAR_CNT (IN p_stdt_id MEDIUMINT UNSIGNED, OUT result TINYINT UNSIGNED)
 BEGIN
 	SELECT grad_year-start_year INTO result
@@ -136,7 +144,12 @@ BEGIN
 END;
 //
 
-/* Calculation for basic constraint type 3 (frequency) */
+/*
+ * Calculation for basic constraint type 3 (frequency)
+ * p_stdt_id: student id
+ * p_actn_type: action type
+ * p_actn_id: action id, corresponds to actn_id in action table
+ */
 CREATE PROCEDURE ACTN_FREQ (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_actn_id SMALLINT UNSIGNED, OUT result TINYINT UNSIGNED)
 BEGIN
 	/*
@@ -171,7 +184,12 @@ BEGIN
 END;
 //
 
-/* Calculation for basic constraint type 3 (consecutive actions) */
+/*
+ * Calculation for basic constraint type 4 (consecutive actions)
+ * p_stdt_id: student id
+ * p_actn_type: action type
+ * p_actn_id: action id
+ */
 CREATE PROCEDURE ACTN_CSTV (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_actn_id SMALLINT UNSIGNED, OUT result TINYINT UNSIGNED)
 BEGIN
 	SELECT @last_lst := 2, @last_actn_id := 0, @last_yr := 0;
