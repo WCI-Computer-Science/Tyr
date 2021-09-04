@@ -356,14 +356,14 @@ void CActionView::OnBnClickedRemoveAction()
 			loadTypeData();
 			AfxMessageBox(_T("Students have participated in this action in the past!\nAction moved to archive instead."));
 		}
+
+		selectionMark = -1;
 	}
 	catch (sql::SQLException& e) {
 		// Exception occured
 		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
 		AfxMessageBox(CString(err.c_str()));
 	}
-
-	selectionMark = -1;
 }
 
 // Access the archive menu
@@ -507,14 +507,13 @@ void CActionArchiveDlg::OnBnClickedUnarchiveAction()
 
 		Action::unarchive(con.get(), m_action_list.GetItemData(selectionMark));
 		loadTypeData();
+		selectionMark = -1;
 	}
 	catch (sql::SQLException& e) {
 		// Exception occured
 		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
 		AfxMessageBox(CString(err.c_str()));
 	}
-
-	selectionMark = -1;
 }
 
 // Delete action from archive, or notify user if not possible
@@ -531,6 +530,7 @@ void CActionArchiveDlg::OnBnClickedRemoveAction()
 		if (Action::autoremove(con.get(), m_action_list.GetItemData(selectionMark))) {
 			loadTypeData();
 			AfxMessageBox(_T("Action successfully deleted."));
+			selectionMark = -1;
 		}
 		else {
 			AfxMessageBox(_T(
@@ -545,8 +545,6 @@ void CActionArchiveDlg::OnBnClickedRemoveAction()
 		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
 		AfxMessageBox(CString(err.c_str()));
 	}
-
-	selectionMark = -1;
 }
 
 
