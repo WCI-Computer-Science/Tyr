@@ -72,7 +72,6 @@ CREATE TABLE student_action (
 /* Constraint information */
 CREATE TABLE cnst (
 	cnst_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-	depth SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 	name VARCHAR(64),
 	description VARCHAR(64) NOT NULL,
 	type TINYINT(1) NOT NULL, /* See DOCUMENTATION.md */

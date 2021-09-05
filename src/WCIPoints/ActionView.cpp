@@ -198,7 +198,7 @@ void CActionView::loadTypeData() {
 		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
 		con->setSchema("points");
 		
-		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type, false);
+		std::auto_ptr<sql::ResultSet> res = Action::get(con.get(), m_type);
 		int i = 0;
 		while (res->next()) {
 			std::string name = res->getString("name");

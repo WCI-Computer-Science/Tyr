@@ -189,6 +189,7 @@
   <ItemGroup>
     <ClInclude Include="Action.h" />
     <ClInclude Include="ActionView.h" />
+    <ClInclude Include="Constraint.h" />
     <ClInclude Include="AwardView.h" />
     <ClInclude Include="CEditDlg.h" />
     <ClInclude Include="custommfc.h" />
@@ -205,6 +206,7 @@
   <ItemGroup>
     <ClCompile Include="Action.cpp" />
     <ClCompile Include="ActionView.cpp" />
+    <ClCompile Include="Constraint.cpp" />
     <ClCompile Include="AwardView.cpp" />
     <ClCompile Include="CEditDlg.cpp" />
     <ClCompile Include="custommfc.cpp" />

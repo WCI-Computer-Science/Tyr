@@ -131,17 +131,14 @@ Since 3.b and 4.b can have multiple values, we choose the action that maximizes 
 
 ### Schematic
 In theory, each constraint forms the node of a DAG. Since there's not really a sense of a parent/child relationship in a DAG, we refer to it as a super/sub relationship.
-Each constraint can use multiple _sub-constraints_, and be used in a _super-constraint_. Note this is in reverse to a traditional parent/child relationship.
+Each constraint can use multiple _sub-constraints_, and be used in a _super-constraint_. Note that some aspects are in reverse to a traditional parent/child relationship.
 
-Each of the three types of constraint above theoretically inherits from a constraint abstract class.
+Each of the five types of constraint above theoretically inherits from a constraint abstract class.
 In the database, there is a base constraint table with information universal to all three types, and other information is stored on seperate tables.
-A constraint has an identifier, a depth, a name, a description, a type, and a field marking it as an award or not.
+A constraint has an identifier, a name, a description, a type, and a field marking it as an award or not.
 
-The depth field stores something similar to depth in a tree. If the constraint is basic, the depth is 0.
-If it's compound, the depth is the maximum depth of all its sub-constraints + 1. A super-constraint will always have a higher depth than a sub-constraint.
-This means the depth effectively serves as a priority: we process all constraints starting with the least depth.
+To process all awards, we use a topological sorting of all constraints, where each sub-constraint should be processed before a super-constraint.
 This allows us to process all constraints bottom-up in O(n) time, compared to O(2^n) time for a naive top-down processing.
-This is essentially a topological sorting, but having a depth field makes the SQL code simpler.
 
 The name field is only required if the constraint is an award. The description field describes the constraint and is used in the UI.  
 If the type is 2, 3, 4, or 5, a constraint is basic (corresponds to 1...4 above), and parameter information for a procedure call is stored in a seperate table.
@@ -151,7 +148,6 @@ If the type is 0 or 1, it is an "or constraint" or an "and constraint", respecti
 |attribute|type|required|
 |---|---|---|
 |Identifier|int|1|
-|Depth|int|1|
 |Name|string|0|
 |Description|string|1|
 |Type|digit|1|

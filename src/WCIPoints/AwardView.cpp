@@ -3,10 +3,27 @@
 
 #include "pch.h"
 #include "framework.h"
+#include "custommfc.h"
 
 #include "WCIPoints.h"
-
 #include "WCIPointsDoc.h"
+#include "CEditDlg.h"
+
+#include "afxdialogex.h"
+
+#include <string>
+#include <iostream>
+
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+#include "Constraint.h"
+
 #include "AwardView.h"
 
 #ifdef _DEBUG
