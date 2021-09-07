@@ -173,3 +173,25 @@ Below, each super/sub relationship is stored for compound constraints (essential
 |---|---|---|
 |Sub constraint ID|int|1|
 |Super constraint ID|int|1|
+
+Note that it may be possible for actions to be removed when they are still used in constraints.
+If the action is actively used (as in constraint types 3.a and 4.a), there should be a notification on the UI, and the constraint should always evaluate to false.
+Otherwise, the fact it was deleted can safely be ignored since there is no foreign key constraint on the Action ID.
+
+### Storing Student Awards
+
+Each time awards are assigned to students, they are stored in a linking table. The table stores whether the award has been confirmed/handed out.
+
+#### Student x Award
+|attribute|type|required|
+|---|---|---|
+|Student ID|int|1|
+|Constraint ID|int|1|
+|Confirmed|bool|1|
+
+Similarly to actions, removing awards that have already been handed out would violate a foreign key constraint. Instead, they are entered into an archive table.
+
+#### Award Archive
+|attribute|type|required|
+|---|---|---|
+|Identifier|int|1|

@@ -8,11 +8,16 @@ namespace Constraint
 	bool add_compound(sql::Connection* con, int id, int sub_id); // Add additional sub-constraint for a compound constraint, return true on success
 
 	bool autoremove(sql::Connection* con, int id);
+
 	void remove(sql::Connection* con, int id);
 
+	void archive(sql::Connection* con, int id);
+	void unarchive(sql::Connection* con, int id);
+	
+	// Edit general constraint info
 	void edit_name(sql::Connection* con, int id, CString name);
 	void edit_description(sql::Connection* con, int id, CString desc);
-	void edit_points(sql::Connection* con, int id, int points);
+	void edit_award(sql::Connection* con, int id, bool award);
 
 	// Edit basic constraints
 	void edit_action_id(sql::Connection* con, int id, int action_id);
@@ -30,6 +35,8 @@ namespace Constraint
 
 	//TODO: how to implement award for a certain student? Should return result set of all awards a user is eligible for, given student id
 
-	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, bool award=false); // Get all constraints, and only see awards if award is set to true
-	std::auto_ptr<sql::ResultSet> get_compound(sql::Connection* con, int id); // Get all sub-constraints of a compound constraint
+	// Get constraints, and see archived if archive is set to true
+	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, bool award=false, bool archive=false); // Get all constraints, and see only awards if award is set to true
+	std::auto_ptr<sql::ResultSet> get_basic(sql::Connection* con, int id); // Get the info on a basic constraint
+	std::auto_ptr<sql::ResultSet> get_compound(sql::Connection* con, int id); // Get all sub-constraints of a compound constraint, and each one's info
 }

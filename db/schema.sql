@@ -1,5 +1,7 @@
 /* For detailed explantion of schematic, consult DOCUMENTATION.md */
 
+DROP TABLE IF EXISTS student_award;
+DROP TABLE IF EXISTS cnst_archive;
 DROP TABLE IF EXISTS compound_cnst;
 DROP TABLE IF EXISTS basic_cnst;
 DROP TABLE IF EXISTS cnst;
@@ -50,7 +52,7 @@ CREATE TABLE action (
 
 /* Archived actions */
 CREATE TABLE action_archive (
-	actn_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	actn_id SMALLINT UNSIGNED NOT NULL,
 
 	PRIMARY KEY (actn_id),
 	FOREIGN KEY (actn_id) REFERENCES action(actn_id)
@@ -85,7 +87,7 @@ CREATE TABLE cnst (
 /* Basic constraint parameter info */
 CREATE TABLE basic_cnst (
 	cnst_id SMALLINT UNSIGNED NOT NULL,
-	actn_id SMALLINT UNSIGNED,
+	actn_id SMALLINT UNSIGNED, /* May not be valid, since actions can be deleted */
 	actn_type TINYINT(1),
 	mx TINYINT UNSIGNED, /* Max points */
 	x TINYINT UNSIGNED NOT NULL, /* Interval start */
@@ -105,6 +107,24 @@ CREATE TABLE compound_cnst (
 	UNIQUE (sub_cnst, super_cnst)
 );
 
+/* Archived constraints */
+CREATE TABLE cnst_archive (
+	cnst_id SMALLINT UNSIGNED NOT NULL,
+
+	PRIMARY KEY (cnst_id),
+	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id)
+);
+
+/* Awards assigned to students */
+CREATE TABLE student_award (
+	stdt_id MEDIUMINT UNSIGNED NOT NULL,
+	cnst_id SMALLINT UNSIGNED NOT NULL,
+	confirmed BOOLEAN NOT NULL DEFAULT false,
+
+	FOREIGN KEY (stdt_id) REFERENCES student(stdt_id),
+	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id),
+	UNIQUE (stdt_id, cnst_id)
+);
 
 
 /*
