@@ -1,5 +1,6 @@
 #pragma once
 
+// Logic and database interfacing for constraints and awards
 // Error handling should be done by caller
 namespace Constraint
 {
@@ -29,11 +30,15 @@ namespace Constraint
 	void remove_compound(sql::Connection* con, int id, int sub_id); // Remove a sub-constraint for a compound constraint
 
 	// Graph operations
-	void load(sql::Connection* con, std::map<int, std::vector<int>>& g, std::vector<int> &v); // Load graph from MySQL into C++
+	// Class for a constraint vertex
+	struct C {
+		int id, type; // ID from database, type of constraint (from 0 to 5)
+		bool is_award; // Whether the constraint is an award
+	};
+	void load(sql::Connection* con, std::map<int, std::vector<C>>& g, std::vector<C>& v); // Load graph from MySQL into C++
 	bool check_cycle(sql::Connection* con, int super_id, int sub_id); // Check if adding an edge will create a cycle
-	
-
-	//TODO: how to implement award for a certain student? Should return result set of all awards a user is eligible for, given student id
+	bool evaluate(sql::Connection* con, int id, int type, int student_id, const std::set<int>& valid); // Evaluate a constraint for a certain user, given set of true constraints
+	bool assign_awards(sql::Connection* con, int student_id); // Add all awards a user qualifies for to the DB, return true if user qualifies for at least 1, false otherwise
 
 	// Get constraints, and see archived if archive is set to true
 	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, bool award=false, bool archive=false); // Get all constraints, and see only awards if award is set to true

@@ -1,5 +1,6 @@
 #pragma once
 
+// Logic and database interfacing for actions
 // Error handling should be done by caller
 namespace Action
 {

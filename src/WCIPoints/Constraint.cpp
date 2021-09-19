@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <queue>
 #include <set>
 #include <map>
 
@@ -19,7 +20,6 @@
 // Add a constraint without specialization, returns id
 int Constraint::add(sql::Connection* con, int type, CString name, CString desc, bool award) {
 	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO cnst (name, description, type, is_award) VALUES (?, ?, ?, ?)"));
-	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 	std::string std_name = CT2A(name);
 	std::string std_desc = CT2A(desc);
@@ -31,7 +31,7 @@ int Constraint::add(sql::Connection* con, int type, CString name, CString desc, 
 
 	pstmt->execute();
 
-	res.reset(stmt->executeQuery("SELECT LAST_INSERT_ID() id"));
+	res.reset(pstmt->executeQuery("SELECT LAST_INSERT_ID() id"));
 
 	if (res->next()) // Should always return true, next() must be called for getInt() to be valid
 		return res->getInt("id");
@@ -40,6 +40,7 @@ int Constraint::add(sql::Connection* con, int type, CString name, CString desc, 
 }
 
 // Add additional info for basic constraint
+// Set parameters to -1 to indicate NULL
 void Constraint::add_basic(sql::Connection* con, int id, int type, int action_id, int action_type, int mx, int x, int y) {
 	std::auto_ptr<sql::PreparedStatement> pstmt;
 	
@@ -124,7 +125,7 @@ bool Constraint::add_compound(sql::Connection* con, int id, int sub_id) {
 
 
 // Remove a constraint if it isn't an award or if it is but hasn't ever been assigned
-// Returns true if action is removed, false if it becomes or remains archived
+// Returns true if award is removed, false if it becomes or remains archived
 bool Constraint::autoremove(sql::Connection* con, int id) {
 	std::auto_ptr<sql::PreparedStatement> pstmt;
 	std::auto_ptr<sql::ResultSet> res;
@@ -300,41 +301,47 @@ void Constraint::remove_compound(sql::Connection* con, int id, int sub_id) {
 
 // Load graph from MySQL into C++
 // Each sub-constraint is a node pointing to a super-constraint (this is in reverse to a parent/child relationship in a tree)
-// Graph is loaded as an adjacency list, vertex list is loaded as a vector
-void Constraint::load(sql::Connection* con, std::map<int, std::vector<int>>& g, std::vector<int>& v) {
+// Graph is loaded as an adjacency list, where each ID (type int) points to vertices (type C)
+// Vertex list is loaded as a vector of C objects
+void Constraint::load(sql::Connection* con, std::map<int, std::vector<C>>& g, std::vector<C>& v) {
 	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 
-	res.reset(stmt->executeQuery("SELECT sub_cnst a, super_cnst b FROM compound_cnst"));
+	res.reset(stmt->executeQuery(
+		"SELECT c_c.sub_cnst a, super.cnst_id b, super.type b_type, super.is_award b_award FROM compound_cnst c_c "
+		"INNER JOIN cnst super ON super.cnst_id=c_c.super_cnst"
+	));
 
 	while (res->next()) {
-		int a = res->getInt("a"), b = res->getInt("b");
-		g[a].push_back(b);
+		int a = res->getInt("a"), b = res->getInt("b"), b_type = res->getInt("b_type");
+		bool b_award = res->getBoolean("b_award");;
+		g[a].push_back({ b, b_type, b_award });
 	}
 
-	res.reset(stmt->executeQuery("SELECT cnst_id id FROM cnst"));
+	res.reset(stmt->executeQuery("SELECT cnst_id id, type, is_award FROM cnst"));
 
 	while (res->next()) {
-		int id = res->getInt("id");
-		v.push_back(id);
+		int id = res->getInt("id"), type = res->getInt("type");
+		bool is_award = res->getBoolean("is_award");
+		v.push_back({ id, type, is_award });
 	}
 }
 
 // Check if adding a certain edge will create a cycle
 bool Constraint::check_cycle(sql::Connection* con, int super_id, int sub_id) {
-	std::map<int, std::vector<int>> g;
-	std::vector<int> v;
+	std::map<int, std::vector<C>> g;
+	std::vector<C> v;
 	load(con, g, v);
 
-	g[sub_id].push_back(super_id);
+	g[sub_id].push_back({ super_id }); // Only ID is used, don't need to initialize the rest
 
 	// Non-recursive DFS to check for cycle (cycle exists iff there is a backedge)
 
 	std::set<int> vis, stk; // Check if vertex is visited or on the call stack, respectively
 	std::stack<int> s; // Call stack
 	
-	for (int i : v) if (!vis.count(i)) {
-		s.push(i);
+	for (const C& i : v) if (!vis.count(i.id)) {
+		s.push(i.id);
 
 		while (!s.empty()) {
 			int t = s.top();
@@ -349,16 +356,172 @@ bool Constraint::check_cycle(sql::Connection* con, int super_id, int sub_id) {
 				continue;
 			}
 			
-			for (int j : g[t]) {
-				if (stk.count(j))
+			for (const C& j : g[t]) {
+				if (stk.count(j.id))
 					return true;
-				if (!vis.count(j))
-					s.push(j);
+				if (!vis.count(j.id))
+					s.push(j.id);
 			}
 		}
 	}
 
 	return false;
+}
+
+// Evaluate a constraint for a certain user, given a set of the IDs of true constraints
+bool Constraint::evaluate(sql::Connection* con, int id, int type, int student_id, const std::set<int>& valid) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::ResultSet> res;
+
+	if (type == 0) { // OR constraint
+		res = get_compound(con, id);
+
+		while (res->next()) {
+			if (valid.count(res->getInt("id")))
+				return true;
+		}
+
+		return false;
+	}
+	else if (type == 1) { // AND constraint
+		res = get_compound(con, id);
+
+		if (!res->isBeforeFirst()) // If there are no sub-constraints
+			return false;
+
+		while (res->next()) {
+			if (!valid.count(res->getInt("id")))
+				return false;
+		}
+
+		return true;
+	}
+	else {
+		res = get_basic(con, id);
+		int action_id = -1, action_type = -1, mx = -1, x = -1, y = -1;
+		int val = -1;
+
+		if (res->next()) { // Should always be true
+			action_id = res->getInt("actn_id");
+			if (res->wasNull())
+				action_id = -1;
+
+			action_type = res->getInt("actn_type");
+			if (res->wasNull())
+				action_type = -1;
+
+			mx = res->getInt("mx");
+			if (res->wasNull())
+				mx = -1;
+
+			x = res->getInt("x");
+
+			y = res->getInt("y");
+		}
+
+		if (type == 2) { // Action sum constraint
+			pstmt.reset(con->prepareStatement("CALL ACTN_SUM(?, ?, ?, @val)"));
+			pstmt->setInt(1, student_id);
+			pstmt->setInt(2, action_type);
+			pstmt->setInt(3, mx);
+		}
+		else if (type == 3) { // Grad years constraint
+			pstmt.reset(con->prepareStatement("CALL YEAR_CNT(?, @val)"));
+			pstmt->setInt(1, student_id);
+		}
+		else if (type == 4) { // Frequency constraint
+			pstmt.reset(con->prepareStatement("CALL ACTN_FREQ(?, ?, ?, @val)"));
+			pstmt->setInt(1, student_id);
+
+			if (action_type >= 0)
+				pstmt->setInt(2, action_type);
+			else
+				pstmt->setNull(2, sql::DataType::INTEGER);
+
+			if (action_id > 0)
+				pstmt->setInt(3, action_id);
+			else
+				pstmt->setNull(3, sql::DataType::INTEGER);
+		}
+		else if (type == 5) { // Consecutive constraint
+			pstmt.reset(con->prepareStatement("CALL ACTN_CSTV(?, ?, ?, @val)"));
+			pstmt->setInt(1, student_id);
+
+			if (action_type >= 0)
+				pstmt->setInt(2, action_type);
+			else
+				pstmt->setNull(2, sql::DataType::INTEGER);
+
+			if (action_id > 0)
+				pstmt->setInt(3, action_id);
+			else
+				pstmt->setNull(3, sql::DataType::INTEGER);
+		}
+		else // Something went wrong
+			return false;
+
+		pstmt->execute();
+
+		res.reset(pstmt->executeQuery("SELECT @val AS val"));
+		if (res->next())
+			val = res->getInt("val");
+
+		if (x <= val && val <= y)
+			return true;
+		else
+			return false;
+	}
+}
+
+// Add all awards a user is eligible for to the DB, return true if user qualifies for at least 1, false otherwise
+bool Constraint::assign_awards(sql::Connection* con, int student_id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	bool qualifies = false;
+
+	std::map<int, std::vector<C>> g;
+	std::vector<C> v;
+	load(con, g, v);
+
+	// Topological sort to evaluate constraints
+
+	std::map<int, int> indeg; // In-degree of each vertex (accessed by Constraint ID)
+	std::queue<C> nxt; // Vertices with in-degree 0
+	std::set<int> valid; // Constraint IDs which have evaluated to true
+
+	for (const std::pair<int, std::vector<C>>& p : g)
+		for (const C& i : p.second)
+			++indeg[i.id];
+	for (const C& i : v)
+		if (indeg[i.id] == 0)
+			nxt.push(i);
+
+	while (!nxt.empty()) {
+		C t = nxt.front(); nxt.pop();
+
+		// Process vertex
+		if (evaluate(con, t.id, t.type, student_id, valid))
+			valid.insert(t.id);
+
+		// Decrease in-degrees and add to queue if necessary
+		for (const C& i : g[t.id])
+			if (--indeg[i.id] == 0)
+				nxt.push(i);
+	}
+
+	// Add assigned awards to database
+	bool assigned_award = false;
+	pstmt.reset(con->prepareStatement("INSERT IGNORE INTO student_award (stdt_id, cnst_id) VALUES (?, ?)")); // INSERT IGNORE is used since student may have existing awards
+
+	pstmt->setInt(1, student_id);
+
+	for (const C& i : v)
+		if (valid.count(i.id) && i.is_award) {
+			pstmt->setInt(2, i.id);
+			pstmt->execute();
+			assigned_award = true;
+		}
+
+	return assigned_award;
 }
 
 
