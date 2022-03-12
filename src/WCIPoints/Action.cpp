@@ -1,14 +1,6 @@
 #include "pch.h"
 #include "afxwinappex.h"
 
-#include "mysql_connection.h"
-
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-#include <cppconn/prepared_statement.h>
-
-#include <string>
-
 #include "Action.h"
 
 

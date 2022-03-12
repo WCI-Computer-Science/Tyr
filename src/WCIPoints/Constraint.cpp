@@ -1,19 +1,6 @@
 #include "pch.h"
 #include "afxwinappex.h"
 
-#include "mysql_connection.h"
-
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-#include <cppconn/prepared_statement.h>
-
-#include <string>
-#include <vector>
-#include <stack>
-#include <queue>
-#include <set>
-#include <map>
-
 #include "Constraint.h"
 
 
@@ -206,6 +193,29 @@ void Constraint::unarchive(sql::Connection* con, int id) {
 	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("DELETE FROM cnst_archive WHERE cnst_id=?"));
 
 	pstmt->setInt(1, id);
+
+	pstmt->execute();
+}
+
+
+// Manually assign an award to a student
+// Assumes constraint id and student_id are valid and award isn't already assigned to that student, raises an exception otherwise
+void Constraint::add_student_award(sql::Connection* con, int id, int student_id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO student_award (stdt_id, cnst_id) VALUES (?, ?)"));
+
+	pstmt->setInt(1, student_id);
+	pstmt->setInt(2, id);
+
+	pstmt->execute();
+}
+
+// Unassign award from a student
+// Assumes constraint id and student_id are valid, raises an exception otherwise
+void Constraint::remove_student_award(sql::Connection* con, int id, int student_id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("DELETE FROM student_award WHERE stdt_id=? AND cnst_id=?"));
+
+	pstmt->setInt(1, student_id);
+	pstmt->setInt(2, id);
 
 	pstmt->execute();
 }

@@ -1,5 +1,14 @@
 #pragma once
 
+#include "mysql_connection.h"
+
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+#include <string>
+
+
 // Logic and database interfacing for actions
 // Error handling should be done by caller
 namespace Action

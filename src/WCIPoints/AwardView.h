@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <vector>
+#include "Constraint.h"
+
 
 class CAwardView : public CFormView
 {
@@ -44,7 +47,27 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
 private:
-	
+	CFont m_titleFont;
+	CStatic m_title;
+
+	CButton m_see_awards_only_check;
+
+	CListCtrl m_constraint_list;
+	std::vector<Constraint::C> m_constraint_vector;
+	int selectionMark; // used to id constraint when editing, etc
+
+	CTreeCtrl m_constraint_tree;
+
+	void loadConstraintList(bool only_awards=false);
+	void loadConstraintTree();
+public:
+	afx_msg void OnBnClickedToggleOnlyAward();
+	afx_msg void OnLvnItemchangedConstraintList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnNMCustomdrawConstraintTree(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnTvnItemChangingConstraintTree(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedCreateConstraint();
+	afx_msg void OnBnClickedRemoveConstraint();
+	afx_msg void OnBnClickedAccessArchive();
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp

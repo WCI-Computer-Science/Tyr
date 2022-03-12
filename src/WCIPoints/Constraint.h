@@ -1,5 +1,19 @@
 #pragma once
 
+#include "mysql_connection.h"
+
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
+#include <string>
+#include <vector>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+
+
 // Logic and database interfacing for constraints and awards
 // Error handling should be done by caller
 namespace Constraint
@@ -14,6 +28,9 @@ namespace Constraint
 
 	void archive(sql::Connection* con, int id);
 	void unarchive(sql::Connection* con, int id);
+
+	void add_student_award(sql::Connection* con, int id, int student_id);
+	void remove_student_award(sql::Connection* con, int id, int student_id);
 	
 	// Edit general constraint info
 	void edit_name(sql::Connection* con, int id, CString name);

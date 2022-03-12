@@ -130,10 +130,12 @@ These calculations are facilitated by SQL procedures. Note that there can be mul
 Since 3.b and 4.b can have multiple values, we choose the action that maximizes the value. See the SQL schema file for specific implementation.
 
 ### Schematic
-In theory, each constraint forms the node of a DAG. Since there's not really a sense of a parent/child relationship in a DAG, we refer to it as a super/sub relationship.
-Each constraint can use multiple _sub-constraints_, and be used in a _super-constraint_. Note that some aspects are in reverse to a traditional parent/child relationship.
+In theory, each constraint forms the node of a DAG. In the award example above, the Award of Honour would be a parent node, and the three W Awards would be a child node.
+Instead of parent/child, the terms super/sub is used to make things more clear.
+Each constraint can use multiple _sub-constraints_, and be used in a _super-constraint_.
 
-Each of the five types of constraint above theoretically inherits from a constraint abstract class.
+Each of the five types of constraint above theoretically inherits from a constraint abstract class,
+although they are not implemented as such in order to better model the data.
 In the database, there is a base constraint table with information universal to all three types, and other information is stored on seperate tables.
 A constraint has an identifier, a name, a description, a type, and a field marking it as an award or not.
 

@@ -191,6 +191,7 @@ void CActionView::loadTypeData() {
 		m_type_static.SetWindowTextW(_T("Activities"));
 
 	m_action_list.DeleteAllItems();
+	selectionMark = -1;
 
 	// Fetch data from MySQL
 	try {

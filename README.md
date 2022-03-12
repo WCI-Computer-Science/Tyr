@@ -10,7 +10,8 @@ This app is meant to be run on x86 Windows 7. It requires MySQL server 5.7 and M
     - MySQL Connector/C++ 1.1.9 x86
 3. When setting up the server, create a new database user named "points" with the password "points". Use default setup for everything else
 4. Ensure the server is installed in `C:\Program Files (x86)\MySQL\MySQL Server 5.7` and the connector is installed in `C:\Program Files (x86)\MySQL\Connector C++ 1.1`. Add `C:\Program Files (x86)\MySQL\MySQL Server 5.7\bin` and `C:\Program Files (x86)\MySQL\Connector C++ 1.1\lib\opt` to the Path system environment variable
-5. Set up DB (fill in after app is finished)
+5. Run schema.sql to set up the DB
+6. Load user data (fill in after app is finished)
 
 ## Development
 To make changes to the source code of the app, or to rebuild it, use Visual Studio 2019 or later. Ensure all Visual C++ components are downloaded. To set up the development environment, follow these instructions:
