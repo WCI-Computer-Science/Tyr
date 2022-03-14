@@ -385,7 +385,7 @@ void CActionView::OnBnClickedAccessArchive()
 IMPLEMENT_DYNAMIC(CActionArchiveDlg, CDialogEx)
 
 CActionArchiveDlg::CActionArchiveDlg(int type, CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_ACTION_ARCHIVE, pParent)
+	: CDialogEx(IDD_ARCHIVE, pParent)
 	, m_type(type)
 	, selectionMark(-1)
 {
@@ -467,14 +467,14 @@ void CActionArchiveDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_TITLE, m_title);
-	DDX_Control(pDX, IDC_ACTION_LIST, m_action_list);
+	DDX_Control(pDX, IDC_ARCHIVE_LIST, m_action_list);
 }
 
 
 BEGIN_MESSAGE_MAP(CActionArchiveDlg, CDialogEx)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_ACTION_LIST, &CActionArchiveDlg::OnLvnItemchangedActionList)
-	ON_BN_CLICKED(IDC_UNARCHIVE_ACTION, &CActionArchiveDlg::OnBnClickedUnarchiveAction)
-	ON_BN_CLICKED(IDC_REMOVE_ACTION, &CActionArchiveDlg::OnBnClickedRemoveAction)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_ARCHIVE_LIST, &CActionArchiveDlg::OnLvnItemchangedActionList)
+	ON_BN_CLICKED(IDC_ARCHIVE_UNARCHIVE, &CActionArchiveDlg::OnBnClickedUnarchiveAction)
+	ON_BN_CLICKED(IDC_ARCHIVE_REMOVE, &CActionArchiveDlg::OnBnClickedRemoveAction)
 END_MESSAGE_MAP()
 
 

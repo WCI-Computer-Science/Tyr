@@ -58,7 +58,7 @@ private:
 
 	CTreeCtrl m_constraint_tree;
 
-	void loadConstraintList(bool only_awards=false);
+	void loadConstraintList();
 	void loadConstraintTree();
 public:
 	afx_msg void OnBnClickedToggleOnlyAward();
@@ -67,6 +67,7 @@ public:
 	afx_msg void OnTvnItemChangingConstraintTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedCreateConstraint();
 	afx_msg void OnBnClickedRemoveConstraint();
+	afx_msg void OnBnClickedEditConstraint();
 	afx_msg void OnBnClickedAccessArchive();
 };
 
@@ -77,3 +78,40 @@ inline CWCIPointsDoc* CAwardView::GetDocument() const
 }
 #endif
 
+
+
+// Award Archive dialog
+
+class CConstraintArchiveDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CConstraintArchiveDlg)
+
+public:
+	CConstraintArchiveDlg(CWnd* pParent = nullptr);
+	virtual ~CConstraintArchiveDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ARCHIVE };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_type;
+
+	CListCtrl m_constraint_list;
+	int selectionMark;
+
+	void loadConstraintList();
+public:
+	afx_msg void OnLvnItemchangedConstraintList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedUnarchiveConstraint();
+	afx_msg void OnBnClickedRemoveConstraint();
+};

@@ -28,4 +28,6 @@ namespace Action
 	
 	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, bool archive=false); // Get all actions, and see archived if archive is set to true
 	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, int type, bool archive=false); // Get actions of a specific type, and see archived if archive is set to true
+
+	std::auto_ptr<sql::ResultSet> info(sql::Connection* con, int id);  // Get information about a certain action id
 }

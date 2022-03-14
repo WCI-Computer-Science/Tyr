@@ -133,7 +133,7 @@ bool Constraint::autoremove(sql::Connection* con, int id) {
 
 	if (ref == 0) {
 		if (arch > 0)
-			unarchive(con, id);
+			unarchive(con, id); // Unarchive to remove foreign key reference (make it possible to delete)
 		remove(con, id);
 		return true;
 	}
@@ -179,12 +179,14 @@ void Constraint::archive(sql::Connection* con, int id) {
 
 	pstmt->execute();
 
+	/*
 	// Delete all edges
 	pstmt.reset(con->prepareStatement("DELETE FROM compound_cnst WHERE sub_cnst=? OR super_cnst=?"));
 	pstmt->setInt(1, id);
 	pstmt->setInt(2, id);
 
 	pstmt->execute();
+	*/
 }
 
 // Unarchive an award

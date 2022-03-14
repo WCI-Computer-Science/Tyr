@@ -87,14 +87,15 @@ CREATE TABLE cnst (
 /* Basic constraint parameter info */
 CREATE TABLE basic_cnst (
 	cnst_id SMALLINT UNSIGNED NOT NULL,
-	actn_id SMALLINT UNSIGNED, /* May not be valid, since actions can be deleted */
+	actn_id SMALLINT UNSIGNED,
 	actn_type TINYINT(1),
 	mx TINYINT UNSIGNED, /* Max points */
 	x TINYINT UNSIGNED NOT NULL, /* Interval start */
 	y TINYINT UNSIGNED NOT NULL, /* Interval end */
 
 	PRIMARY KEY (cnst_id),
-	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id)
+	FOREIGN KEY (cnst_id) REFERENCES cnst(cnst_id),
+	FOREIGN KEY (actn_id) REFERENCES action(actn_id)
 );
 
 /* Compound constraint edge list */

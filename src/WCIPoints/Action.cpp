@@ -39,7 +39,7 @@ bool Action::autoremove(sql::Connection* con, int id) {
 
 	if (ref == 0) {
 		if (arch > 0)
-			unarchive(con, id);
+			unarchive(con, id); // Unarchive to remove foreign key reference (make it possible to delete)
 		remove(con, id);
 		return true;
 	}
@@ -143,6 +143,22 @@ std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, int type, bool a
 
 	pstmt->setInt(1, type);
 	
+	res.reset(pstmt->executeQuery());
+	return res;
+}
+
+
+// Get info
+std::auto_ptr<sql::ResultSet> Action::info(sql::Connection* con, int id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::ResultSet> res;
+
+	pstmt.reset(con->prepareStatement(
+		"SELECT type, name, points FROM action WHERE actn_id=?"
+	));
+
+	pstmt->setInt(1, id);
+
 	res.reset(pstmt->executeQuery());
 	return res;
 }

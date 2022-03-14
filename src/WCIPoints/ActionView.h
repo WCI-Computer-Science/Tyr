@@ -86,7 +86,7 @@ public:
 
 	// Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ACTION_ARCHIVE };
+	enum { IDD = IDD_ARCHIVE };
 #endif
 
 protected:

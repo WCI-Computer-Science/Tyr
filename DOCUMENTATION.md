@@ -101,6 +101,7 @@ That means the Award of Honour would need 2\*3*2=12 constraint sets. If we were 
 
 Instead, we can treat awards and constraints as the same thing (an award essentially inherits from a constraint). This means to check the Award of Honour, we evaluate each W award seperately,
 for 2+3+2=7 constraints checked. This reduces complexity to linear, and also allows short circuiting if any required constraint evaluates to false.
+Due to this normalization, we can re-use constraints and make the process of making and processing awards simpler.
 
 The constraints should then form a directed acyclic graph (DAG), and evaluating them will use an order similar to a topological search.
 
