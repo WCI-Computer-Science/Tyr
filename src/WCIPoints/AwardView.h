@@ -65,7 +65,8 @@ public:
 	afx_msg void OnLvnItemchangedConstraintList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnNMCustomdrawConstraintTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnTvnItemChangingConstraintTree(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnBnClickedCreateConstraint();
+	afx_msg void OnBnClickedCreateBasicConstraint();
+	afx_msg void OnBnClickedCreateCompoundConstraint();
 	afx_msg void OnBnClickedRemoveConstraint();
 	afx_msg void OnBnClickedEditConstraint();
 	afx_msg void OnBnClickedAccessArchive();
@@ -104,8 +105,6 @@ private:
 	CFont m_titleFont;
 	CStatic m_title;
 
-	int m_type;
-
 	CListCtrl m_constraint_list;
 	int selectionMark;
 
@@ -114,4 +113,118 @@ public:
 	afx_msg void OnLvnItemchangedConstraintList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedUnarchiveConstraint();
 	afx_msg void OnBnClickedRemoveConstraint();
+};
+
+
+
+// Create basic award/constraint dialog
+
+class CConstraintCreateBasicDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CConstraintCreateBasicDlg)
+
+public:
+	CConstraintCreateBasicDlg(CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CConstraintCreateBasicDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_AWARD_BASIC_CREATE };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	virtual void OnOK(); // Override OK button to perform input validation
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	CButton m_is_award_check;
+
+	CListBox m_award_type_list;
+	int selectionMarkAwardType;
+	CStatic m_award_type_description;
+
+	CListBox m_action_type_list;
+	CListCtrl m_action_list;
+
+	void loadTypeData();
+	void disableActionList();
+	void enableActionList();
+
+public:
+	bool m_is_award;
+
+	CString m_award_name;
+	CString m_award_description;
+
+	int m_award_type;
+
+	int m_action_type;
+	int m_action_id;
+
+	int m_award_mx;
+	int m_award_x;
+	int m_award_y;	
+
+public:
+	afx_msg void OnLbnSelchangeAwardTypeList();
+	afx_msg void OnLbnSelchangeActionTypeList();
+	afx_msg void OnLvnItemchangedActionList(NMHDR* pNMHDR, LRESULT* pResult);
+};
+
+
+
+// Create compound award/constraint dialog
+
+class CConstraintCreateCompoundDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CConstraintCreateCompoundDlg)
+
+public:
+	CConstraintCreateCompoundDlg(CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CConstraintCreateCompoundDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_AWARD_COMPOUND_CREATE };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	virtual void OnOK(); // Override OK button to perform input validation
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	CButton m_is_award_check;
+
+	CListBox m_award_type_list;
+	CStatic m_award_type_description;
+
+	CListCtrl m_constraint_list;
+	void loadConstraintList();
+
+public:
+	bool m_is_award;
+
+	CString m_award_name;
+	CString m_award_description;
+
+	std::vector<int> m_constraint_ids;
+
+	int m_award_type;
+
+public:
+	afx_msg void OnLbnSelchangeAwardTypeList();
 };

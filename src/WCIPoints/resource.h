@@ -21,10 +21,13 @@
 #define IDD_EDIT_VALUE                  324
 #define IDD_ACTION_CREATE               328
 #define IDD_ARCHIVE                     330
+#define IDD_AWARD_BASIC_CREATE          332
+#define IDD_AWARD_COMPOUND_CREATE       334
 #define IDC_TITLE                       1008
 #define IDC_ACTION_TYPE_STATIC          1010
 #define IDC_ACTION_TYPE_CHANGE          1011
 #define IDC_ACTION_TYPE_LIST            1012
+#define IDC_AWARD_TYPE_LIST             1013
 #define IDC_ACTION_LIST                 1014
 #define IDC_ACTION_ATTR_STATIC          1017
 #define IDC_EDIT_ACTION_ATTR            1018
@@ -38,10 +41,19 @@
 #define IDC_CONSTRAINT_LIST             1030
 #define IDC_TOGGLE_ONLY_AWARD           1031
 #define IDC_CREATE_CONSTRAINT           1032
+#define IDC_CREATE_BASIC_CONSTRAINT     1032
 #define IDC_REMOVE_CONSTRAINT           1033
+#define IDC_CREATE_COMPOUND_CONSTRAINT  1034
 #define IDC_EDIT_CONSTRAINT             1035
 #define IDC_ARCHIVE_REMOVE              1036
 #define IDC_ARCHIVE_LIST                1037
+#define IDC_IS_AWARD                    1038
+#define IDC_AWARD_X                     1039
+#define IDC_AWARD_Y                     1040
+#define IDC_DESCRIPTION                 1041
+#define IDC_AWARD_MX                    1042
+#define IDC_AWARD_NAME                  1043
+#define IDC_AWARD_DESCRIPTION           1044
 #define ID_STUDENT_ADD                  32771
 #define ID_STUDENT_EDIT                 32772
 #define ID_ACTIONS_AD                   32773
@@ -59,9 +71,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        332
+#define _APS_NEXT_RESOURCE_VALUE        336
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1038
+#define _APS_NEXT_CONTROL_VALUE         1044
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

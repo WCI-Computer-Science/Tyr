@@ -7,6 +7,7 @@
 // Add a constraint without specialization, returns id
 int Constraint::add(sql::Connection* con, int type, CString name, CString desc, bool award) {
 	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO cnst (name, description, type, is_award) VALUES (?, ?, ?, ?)"));
+	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 	std::string std_name = CT2A(name);
 	std::string std_desc = CT2A(desc);
@@ -18,7 +19,7 @@ int Constraint::add(sql::Connection* con, int type, CString name, CString desc, 
 
 	pstmt->execute();
 
-	res.reset(pstmt->executeQuery("SELECT LAST_INSERT_ID() id"));
+	res.reset(stmt->executeQuery("SELECT LAST_INSERT_ID() id"));
 
 	if (res->next()) // Should always return true, next() must be called for getInt() to be valid
 		return res->getInt("id");
@@ -383,6 +384,7 @@ bool Constraint::check_cycle(sql::Connection* con, int super_id, int sub_id) {
 // Evaluate a constraint for a certain user, given a set of the IDs of true constraints
 bool Constraint::evaluate(sql::Connection* con, int id, int type, int student_id, const std::set<int>& valid) {
 	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 
 	if (type == 0) { // OR constraint
@@ -474,7 +476,7 @@ bool Constraint::evaluate(sql::Connection* con, int id, int type, int student_id
 
 		pstmt->execute();
 
-		res.reset(pstmt->executeQuery("SELECT @val AS val"));
+		res.reset(stmt->executeQuery("SELECT @val AS val"));
 		if (res->next())
 			val = res->getInt("val");
 
