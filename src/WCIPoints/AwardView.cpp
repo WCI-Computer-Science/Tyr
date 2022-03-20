@@ -1189,7 +1189,7 @@ void CConstraintCreateBasicDlg::OnLbnSelchangeAwardTypeList()
 			break;
 		case 4: // Frequency (any of a type)
 			m_award_type_description.SetWindowTextW(_T(
-				"This award/constraint checks whether the frequency of any action certain type is in the specified range. "
+				"This award/constraint checks whether the frequency of any action of a specific type is in the specified range. "
 				"Choose an action type from below (on the right). The student must have participated in actions of that type a certain number of times."
 			));
 
@@ -1227,7 +1227,7 @@ void CConstraintCreateBasicDlg::OnLbnSelchangeAwardTypeList()
 			break;
 		case 7: // Consecutive (any of a type)
 			m_award_type_description.SetWindowTextW(_T(
-				"This award/constraint checks whether a student has participated in the any action of a specific type for some years in a row, where the number of years is in the specified range. "
+				"This award/constraint checks whether a student has participated in any action of a specific type for some years in a row, where the number of years is in the specified range. "
 				"Choose an action type from below (on the right). The student must have participated in actions of that type a certain number of years in a row."
 			));
 
@@ -1540,7 +1540,7 @@ BOOL CConstraintEditBasicDlg::OnInitDialog()
 		break;
 	case 4: // Frequency (any of a type)
 		m_award_type_description.SetWindowTextW(_T(
-			"This award/constraint checks whether the frequency of any action certain type is in the specified range. "
+			"This award/constraint checks whether the frequency of any action of a specific type is in the specified range. "
 			"Reference the action type given below. The student must have participated in actions of that type a certain number of times."
 		));
 
@@ -1570,7 +1570,7 @@ BOOL CConstraintEditBasicDlg::OnInitDialog()
 		break;
 	case 7: // Consecutive (any of a type)
 		m_award_type_description.SetWindowTextW(_T(
-			"This award/constraint checks whether a student has participated in the any action of a specific type for some years in a row, where the number of years is in the specified range. "
+			"This award/constraint checks whether a student has participated in any action of a specific type for some years in a row, where the number of years is in the specified range. "
 			"Reference the action type given below. The student must have participated in actions of that type a certain number of years in a row."
 		));
 
