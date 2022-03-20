@@ -596,7 +596,127 @@ void CAwardView::OnBnClickedRemoveConstraint()
 
 void CAwardView::OnBnClickedEditConstraint()
 {
-	// TODO: Add your control notification handler code here
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::auto_ptr<sql::ResultSet> res;
+
+		Constraint::C current_cnst = m_constraint_vector[m_constraint_list.GetItemData(selectionMark)];
+		CString name = m_constraint_list.GetItemText(selectionMark, 0), desc = m_constraint_list.GetItemText(selectionMark, 1);
+
+		if (current_cnst.type <= 1) { // Compound constraint
+
+		}
+		else { // Basic constraint
+			// Get constraint info
+			res = Constraint::get_basic(con.get(), current_cnst.id);
+			int action_id = -1, action_type = -1;
+			int mx = -1, x = -1, y = -1;
+			if (res->next()) { // Should always be true
+				action_id = res->getInt("actn_id");
+				if (res->wasNull())
+					action_id = -1;
+
+				action_type = res->getInt("actn_type");
+				if (res->wasNull())
+					action_type = -1;
+
+				mx = res->getInt("mx");
+				if (res->wasNull())
+					mx = -1;
+
+				x = res->getInt("x");
+
+				y = res->getInt("y");
+			}
+
+			// Get name of the action type
+			CString action_type_name;
+			if (action_type == 0)
+				action_type_name = _T("Athletics");
+			else if (action_type == 1)
+				action_type_name = _T("Academics");
+			else if (action_type == 2)
+				action_type_name = _T("Activities");
+
+			// Get name of action and action type
+			CString action_name;
+			if (action_id > 0 && action_type < 0) {
+				res = Action::info(con.get(), action_id);
+				if (res->next()) {
+					action_name = (res->getString("name")).c_str();
+					// Set action_type_name anyway, since we need to pass the information to the control
+					switch (res->getInt("type")) {
+					case 0:
+						action_type_name = "Athletics";
+						break;
+					case 1:
+						action_type_name = "Academics";
+						break;
+					case 2:
+						action_type_name = "Activities";
+						break;
+					}
+				}
+			}
+
+			int award_type;
+
+			if (current_cnst.type == 2) // Action sum
+				award_type = 0;
+			else if (current_cnst.type == 3) // Grad year
+				award_type = 1;
+			else if (current_cnst.type == 4) { // Frequency
+				if (action_id > 0 && action_type < 0) // Frequency of a specific action
+					award_type = 2;
+				else if (action_id > 0 && action_type >= 0) // Frequency of some specific action of the given type
+					award_type = 3;
+				else if (action_id < 0 && action_type >= 0) // Frequency of any action of the given type
+					award_type = 4;
+			}
+			else { // Consecutive
+				if (action_id > 0 && action_type < 0) // Consecutive occurrences of a specific action
+					award_type = 5;
+				else if (action_id > 0 && action_type >= 0) // Consecutive occurrences of some specific action of the given type 
+					award_type = 6;
+				else if (action_id < 0 && action_type >= 0) // Consecutive occurrences of any action of the given type
+					award_type = 7;
+			}
+
+			CConstraintEditBasicDlg constraintEditBasicDlg(award_type, name, desc, action_type_name, action_name, mx, x, y);
+			// Update item
+			if (constraintEditBasicDlg.DoModal() == IDOK) {
+				// Check for valid range
+				if (constraintEditBasicDlg.m_award_x > constraintEditBasicDlg.m_award_y) {
+					AfxMessageBox(_T("Invalid range! Your lower bound was greater than your upper bound."));
+					return;
+				}
+
+
+				Constraint::edit_name(con.get(), current_cnst.id, constraintEditBasicDlg.m_award_name);
+				Constraint::edit_description(con.get(), current_cnst.id, constraintEditBasicDlg.m_award_description);
+				Constraint::edit_x(con.get(), current_cnst.id, constraintEditBasicDlg.m_award_x);
+				Constraint::edit_y(con.get(), current_cnst.id, constraintEditBasicDlg.m_award_y);
+
+				if (award_type == 0)
+					Constraint::edit_mx(con.get(), current_cnst.id, constraintEditBasicDlg.m_award_mx);
+
+				// Reload
+				loadConstraintList();
+			}
+		}
+		
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
 }
 
 // Access the archive menu
@@ -887,10 +1007,14 @@ void CConstraintCreateBasicDlg::OnOK()
 			AfxMessageBox(_T("Select an action type! (e.g, Athletics)"));
 			return;
 		}
+
+		// m_action_id is automatically set to -1 by disableActionList
 	}
 	else if (selectionMarkAwardType == 1) { // Grad years
 		m_award_type = 3;
+		m_action_type = -1;
 		m_award_mx = -1;
+		// m_action_id is automatically set to -1 by disableActionList
 	}
 	else if (selectionMarkAwardType <= 4) { // Frequency
 		m_award_type = 4;
@@ -913,7 +1037,7 @@ void CConstraintCreateBasicDlg::OnOK()
 			m_action_id = 1; // Set action id to some positive value, since it is ignored but needs to be set
 		}
 		else { // Any of type
-			m_action_id = -1;
+			m_action_id = -1; // Technically not needed as m_action_id is automatically set to -1 by disableActionList, but set for clarity
 		}
 	}
 	else { // Consecutive
@@ -1305,3 +1429,191 @@ void CConstraintCreateCompoundDlg::OnLbnSelchangeAwardTypeList() {
 			));
 	}
 }
+
+
+
+
+
+
+// CConstraintEditBasicDlg dialog
+
+IMPLEMENT_DYNAMIC(CConstraintEditBasicDlg, CDialogEx)
+
+CConstraintEditBasicDlg::CConstraintEditBasicDlg(
+	int award_type, CString name, CString description, CString action_type, CString action_id, int mx, int x, int y, CWnd* pParent /*=nullptr*/
+)
+	: CDialogEx(IDD_AWARD_BASIC_EDIT, pParent)\
+	, m_award_type(award_type) // Should be from 0 to 7 like in CConstraintCreateBasicDlg
+	, m_award_name(name)
+	, m_award_description(description)
+	, m_action_type(action_type)
+	, m_action_name(action_id)
+	, m_award_mx(mx)
+	, m_award_x(x)
+	, m_award_y(y)
+{
+
+}
+
+CConstraintEditBasicDlg::~CConstraintEditBasicDlg()
+{
+}
+
+BOOL CConstraintEditBasicDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	m_titleFont.CreateFontW(
+		18,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	m_title.SetFont(&m_titleFont);
+
+	m_action_descriptionFont.CreateFontW(
+		16,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	m_action_description.SetFont(&m_action_descriptionFont);
+
+	// award_type should be from 0 to 7, similar to CConstraintCreateBasicDlg
+	switch (m_award_type) {
+	case 0: // Action sum
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether the sum of action points (e.g, Athletic points) is in the specified range."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Type: ") + m_action_type));
+		break;
+	case 1: // Grad year
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether the years the student takes to graduate is in the specified range."
+		));
+
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	case 2: // Frequency (specific action)
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether the frequency of a certain action is in the specified range. "
+			"Reference the specific action given below. The student must have participated in it a certain number of times."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Action name: ") + m_action_name + _T("\nType: ") + m_action_type));
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	case 3: // Frequency (specific of a type)
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether the frequency of a specific action of a certain type in the specified range. "
+			"Reference the action type given below. The student must have participated in the same action of that type a certain number of times."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Type: ") + m_action_type));
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	case 4: // Frequency (any of a type)
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether the frequency of any action certain type is in the specified range. "
+			"Reference the action type given below. The student must have participated in actions of that type a certain number of times."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Type: ") + m_action_type));
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	case 5: // Consecutive (specific action)
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether a student has participated in a certain action for some years in a row, where the number of years is in the specified range. "
+			"Reference the specific action given below. The student must have participated in it a certain number of years in a row."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Action name: ") + m_action_name + _T("\nType: ") + m_action_type));
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	case 6: // Consecutive (specific of a type)
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether a student has participated in the same action of a specific type for some years in a row, where the number of years is in the specified range. "
+			"Reference the action type given below. The student must have participated in the same action of that type a certain number of years in a row."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Type: ") + m_action_type));
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	case 7: // Consecutive (any of a type)
+		m_award_type_description.SetWindowTextW(_T(
+			"This award/constraint checks whether a student has participated in the any action of a specific type for some years in a row, where the number of years is in the specified range. "
+			"Reference the action type given below. The student must have participated in actions of that type a certain number of years in a row."
+		));
+
+		m_action_description.SetWindowTextW(CString(_T("Type: ") + m_action_type));
+		GetDlgItem(IDC_AWARD_MX)->EnableWindow(FALSE);
+		GetDlgItem(IDC_AWARD_MX)->SetWindowText(_T("1")); // Set mx to 1 to pass DDV validator
+		break;
+	}
+
+	return TRUE;
+}
+
+void CConstraintEditBasicDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_DESCRIPTION, m_award_type_description);
+	DDX_Text(pDX, IDC_AWARD_NAME, m_award_name);
+	DDV_MaxChars(pDX, m_award_name, 64);
+	DDV_MinChars(pDX, m_award_name, 1);
+	DDX_Text(pDX, IDC_AWARD_DESCRIPTION, m_award_description);
+	DDV_MaxChars(pDX, m_award_description, 64);
+	DDX_Text(pDX, IDC_AWARD_MX, m_award_mx);
+	DDV_MinMaxInt(pDX, m_award_mx, 1, 63);
+	DDX_Text(pDX, IDC_AWARD_X, m_award_x);
+	DDV_MinMaxInt(pDX, m_award_x, 0, 255);
+	DDX_Text(pDX, IDC_AWARD_Y, m_award_y);
+	DDV_MinMaxInt(pDX, m_award_y, 0, 255);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_EXTRA_DESCRIPTION, m_action_description);
+}
+
+// Perform necessary validation that isn't covered by DDV validators
+void CConstraintEditBasicDlg::OnOK()
+{
+	if (m_award_type != 0) { // Anything other than action sum
+		m_award_mx = -1;
+	}
+
+	CDialog::OnOK();
+}
+
+BEGIN_MESSAGE_MAP(CConstraintEditBasicDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// CConstraintEditBasicDlg message handlers

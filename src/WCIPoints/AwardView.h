@@ -228,3 +228,51 @@ public:
 public:
 	afx_msg void OnLbnSelchangeAwardTypeList();
 };
+
+
+
+// Edit basic award/constraint dialog
+
+class CConstraintEditBasicDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CConstraintEditBasicDlg)
+
+public:
+	// requires current award info to construct
+	CConstraintEditBasicDlg(int award_type, CString name, CString description, CString action_type, CString action_id, int mx, int x, int y, CWnd* pParent = nullptr);
+	virtual ~CConstraintEditBasicDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_AWARD_BASIC_EDIT };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	virtual void OnOK(); // Override OK button to perform input validation
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_award_type;
+	CStatic m_award_type_description;
+
+	CFont m_action_descriptionFont;
+	CStatic m_action_description;
+
+	CString m_action_type; // For simplicity, action_type is non-mutable, info is displayed instead
+	CString m_action_name; // Same with action_id, name is displayed instead
+
+public:
+	CString m_award_name;
+	CString m_award_description;
+
+	int m_award_mx;
+	int m_award_x;
+	int m_award_y;
+};
