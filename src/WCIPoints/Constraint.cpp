@@ -213,7 +213,7 @@ void Constraint::add_student_award(sql::Connection* con, int id, int student_id)
 }
 
 // Unassign award from a student
-// Assumes constraint id and student_id are valid, raises an exception otherwise
+// Assumes constraint id and student_id are valid
 void Constraint::remove_student_award(sql::Connection* con, int id, int student_id) {
 	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("DELETE FROM student_award WHERE stdt_id=? AND cnst_id=?"));
 

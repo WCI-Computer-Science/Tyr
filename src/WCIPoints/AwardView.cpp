@@ -610,7 +610,7 @@ void CAwardView::OnBnClickedEditConstraint()
 		CString name = m_constraint_list.GetItemText(selectionMark, 0), desc = m_constraint_list.GetItemText(selectionMark, 1);
 
 		if (current_cnst.type <= 1) { // Compound constraint
-
+			// TODO: finish editing of compound constraints
 		}
 		else { // Basic constraint
 			// Get constraint info
@@ -665,7 +665,7 @@ void CAwardView::OnBnClickedEditConstraint()
 				}
 			}
 
-			int award_type;
+			int award_type = -1;
 
 			if (current_cnst.type == 2) // Action sum
 				award_type = 0;

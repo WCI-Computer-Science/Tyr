@@ -43,6 +43,27 @@ protected:
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_year;
+	CFont m_year_staticFont;
+	CStatic m_year_static;
+
+	CButton m_see_all_students_check;
+
+	LVCOLUMN m_col_oen, m_col_last_name, m_col_first_name, m_col_pref_name, m_col_start_year, m_col_grad_year;
+	CListCtrl m_student_list;
+	int selectionMark; // used to id student when removing, etc
+
+	void loadStudentList();
+
+public:
+	afx_msg void OnBnClickedStudentYearChange();
+	afx_msg void OnBnClickedToggleSeeAll();
+	afx_msg void OnLvnItemchangedStudentList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnColumnclickStudentList(NMHDR* pNMHDR, LRESULT* pResult);
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
