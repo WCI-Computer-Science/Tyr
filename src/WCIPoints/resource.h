@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by WCIPoints.rc
 //
+#define IDD_STUDENT_MANAGE_LIST         9
 #define IDD_ABOUTBOX                    100
 #define IDR_POPUP_EDIT                  119
 #define ID_STATUSBAR_PANE1              120
@@ -24,6 +25,8 @@
 #define IDD_AWARD_BASIC_CREATE          332
 #define IDD_AWARD_COMPOUND_CREATE       334
 #define IDD_AWARD_BASIC_EDIT            336
+#define IDD_STUDENT_CREATE              338
+#define IDD_STUDENT_ASSIGN_ACTION       340
 #define IDC_TITLE                       1008
 #define IDC_ACTION_TYPE_STATIC          1010
 #define IDC_ACTION_TYPE_CHANGE          1011
@@ -64,9 +67,17 @@
 #define IDC_ASSIGN_ACTIONS              1053
 #define IDC_EVALUATE_AWARDS             1054
 #define IDC_HAND_OUT_AWARDS             1055
+#define IDC_STUDENT_OEN                 1055
 #define IDC_SEE_AWARDS                  1056
-#define IDC_REMOVE_STUDENT2             1057
+#define IDC_STUDENT_LASTNAME            1056
+#define IDC_BUTTON1                     1056
+#define IDC_STUDENT_MANAGE              1056
 #define IDC_SEE_STUDENT_AWARDS          1057
+#define IDC_STUDENT_FIRSTNAME           1057
+#define IDC_STUDENT_PREFNAME            1058
+#define IDC_EDIT_ACTIONS                1058
+#define IDC_STUDENT_STARTYEAR           1059
+#define IDC_STUDENT_GRADYEAR            1060
 #define ID_STUDENT_ADD                  32771
 #define ID_STUDENT_EDIT                 32772
 #define ID_ACTIONS_AD                   32773
@@ -84,9 +95,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        338
+#define _APS_NEXT_RESOURCE_VALUE        344
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1055
+#define _APS_NEXT_CONTROL_VALUE         1057
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

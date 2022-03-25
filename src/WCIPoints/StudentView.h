@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <vector>
 
 class CStudentView : public CFormView
 {
@@ -64,6 +65,16 @@ public:
 	afx_msg void OnBnClickedToggleSeeAll();
 	afx_msg void OnLvnItemchangedStudentList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnLvnColumnclickStudentList(NMHDR* pNMHDR, LRESULT* pResult);
+
+	afx_msg void OnBnClickedCreateStudent();
+	afx_msg void OnBnClickedRemoveStudent();
+	afx_msg void OnBnClickedAssignActions();
+	afx_msg void OnBnClickedEditActions();
+	afx_msg void OnBnClickedSeeStudentAwards();
+
+	afx_msg void OnBnClickedEvaluateAwards();
+	afx_msg void OnBnClickedHandOutAwards();
+	afx_msg void OnBnClickedSeeAwards();
 };
 
 #ifndef _DEBUG  // debug version in WCIPointsView.cpp
@@ -71,3 +82,118 @@ inline CWCIPointsDoc* CStudentView::GetDocument() const
    { return reinterpret_cast<CWCIPointsDoc*>(m_pDocument); }
 #endif
 
+
+
+// Create student dialog
+
+class CStudentCreateDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CStudentCreateDlg)
+
+public:
+	CStudentCreateDlg(int start_year, CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CStudentCreateDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_STUDENT_CREATE };
+#endif
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+public:
+	CString m_oen;
+	CString m_last_name;
+	CString m_first_name;
+	CString m_pref_name;
+	int m_start_year;
+	int m_grad_year;
+};
+
+
+
+// Assign awards to student dialog
+
+class CStudentAssignActionDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CStudentAssignActionDlg)
+
+public:
+	CStudentAssignActionDlg(int year, CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CStudentAssignActionDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_STUDENT_ASSIGN_ACTION };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	virtual void OnOK(); // Add all ids into the vector on OK
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_action_type;
+	CListCtrl m_action_list;
+	CListBox m_action_type_list;
+
+	void loadTypeData();
+
+public:
+	std::vector<int> m_action_ids;
+	int m_year;
+
+	afx_msg void OnLbnSelchangeActionTypeList();
+};
+
+
+
+// See student actions dialog
+
+class CStudentEditActionsDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CStudentEditActionsDlg)
+
+public:
+	CStudentEditActionsDlg(CString header, CString title, int student_id, CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CStudentEditActionsDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_STUDENT_MANAGE_LIST };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CString m_header;
+
+	CString m_title_text;
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_student_id;
+
+	LVCOLUMN m_col_name, m_col_type, m_col_points, m_col_year;
+	CListCtrl m_action_list;
+	int selectionMark;
+
+	CButton m_remove_action;
+
+	void loadTypeData();
+public:
+	afx_msg void OnBnClickedStudentDeleteAction();
+	afx_msg void OnLvnItemchangedStudentList(NMHDR* pNMHDR, LRESULT* pResult);
+};

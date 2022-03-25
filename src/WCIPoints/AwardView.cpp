@@ -202,21 +202,6 @@ void CAwardView::loadConstraintTree() {
 
 	CString root_name = m_constraint_list.GetItemText(selectionMark, 0) + _T(": ") + m_constraint_list.GetItemText(selectionMark, 1);
 
-	// TODO: Figure out why the entire row is empty here but not in the one below
-	/*
-	HTREEITEM cnst = m_constraint_tree.InsertItem(
-		TVIF_TEXT & TVIF_STATE,
-		name,
-		0,
-		0,
-		TVIS_EXPANDED,
-		TVIS_EXPANDED,
-		0,
-		NULL,
-		NULL
-	);
-	*/
-
 	// Use root_handle to add sub-constraints as children in the constraint tree
 	HTREEITEM root_handle = m_constraint_tree.InsertItem(root_name);
 
@@ -610,7 +595,7 @@ void CAwardView::OnBnClickedEditConstraint()
 		CString name = m_constraint_list.GetItemText(selectionMark, 0), desc = m_constraint_list.GetItemText(selectionMark, 1);
 
 		if (current_cnst.type <= 1) { // Compound constraint
-			// TODO: finish editing of compound constraints
+			// TODO: finish editing of compound constraints (need to take into account cycles)
 		}
 		else { // Basic constraint
 			// Get constraint info

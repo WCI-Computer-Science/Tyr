@@ -47,6 +47,30 @@ void Student::remove(sql::Connection* con, int id) {
 	pstmt->execute();
 }
 
+
+// Assign an action
+void Student::assign_action(sql::Connection* con, int id, int action_id, int year) {
+	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT IGNORE INTO student_action (stdt_id, actn_id, start_year) VALUES (?, ?, ?)")); // Insert ignore used since students may already be assigned action
+
+	pstmt->setInt(1, id);
+	pstmt->setInt(2, action_id);
+	pstmt->setInt(3, year);
+
+	pstmt->execute();
+}
+
+// Delete an action
+void Student::remove_action(sql::Connection* con, int id, int action_id, int year) {
+	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("DELETE FROM student_action WHERE stdt_id=? AND actn_id=? AND start_year=?"));  
+
+	pstmt->setInt(1, id);
+	pstmt->setInt(2, action_id);
+	pstmt->setInt(3, year);
+
+	pstmt->execute();
+}
+
+
 // Edit various student attributes
 void Student::edit_OEN(sql::Connection* con, int id, CString OEN) {
 	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("UPDATE student SET oen=? WHERE stdt_id=?"));
@@ -82,7 +106,11 @@ void Student::edit_pref_name(sql::Connection* con, int id, CString pref_name) {
 	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("UPDATE student SET pref_name=? WHERE stdt_id=?"));
 	std::string std_pref_name = CT2A(pref_name);
 
-	pstmt->setString(1, std_pref_name);
+	if (pref_name.GetLength() > 0) // preferred name is optional
+		pstmt->setString(1, std_pref_name);
+	else
+		pstmt->setNull(1, sql::DataType::VARCHAR); // sql::DataType technically does nothing in setNull source code, setting here anyway for clarity
+
 	pstmt->setInt(2, id);
 
 	pstmt->execute();
@@ -113,7 +141,7 @@ std::auto_ptr<sql::ResultSet> Student::get(sql::Connection* con) {
 	std::auto_ptr<sql::ResultSet> res;
 
 	res.reset(stmt->executeQuery(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student ORDER BY grad_year, last_name"
 	));
 
 	return res;
@@ -125,7 +153,7 @@ std::auto_ptr<sql::ResultSet> Student::get(sql::Connection* con, int year) {
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year<=? AND grad_year>=?"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year<=? AND grad_year>=? ORDER BY last_name"
 	));
 
 	pstmt->setInt(1, year);
@@ -141,7 +169,7 @@ std::auto_ptr<sql::ResultSet> Student::get_start(sql::Connection* con, int start
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year=?"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year=? ORDER BY last_name"
 	));
 
 	pstmt->setInt(1, start_year);
@@ -156,7 +184,59 @@ std::auto_ptr<sql::ResultSet> Student::get_grad(sql::Connection* con, int grad_y
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE grad_year=?"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE grad_year=? ORDER BY last_name"
+	));
+
+	pstmt->setInt(1, grad_year);
+
+	res.reset(pstmt->executeQuery());
+	return res;
+}
+
+
+// Get all actions of a student
+std::auto_ptr<sql::ResultSet> Student::get_actions(sql::Connection* con, int id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::ResultSet> res;
+
+	pstmt.reset(con->prepareStatement(
+		"SELECT a.actn_id actn_id, a.type type, a.name name, a.points points, s_a.start_year year FROM action a "
+		"INNER JOIN student_action s_a ON s_a.actn_id = a.actn_id WHERE s_a.stdt_id = ? "
+		"ORDER BY year, type, name"
+	));
+
+	pstmt->setInt(1, id);
+
+	res.reset(pstmt->executeQuery());
+	return res;
+}
+
+// Get all awards of a student
+std::auto_ptr<sql::ResultSet> Student::get_awards(sql::Connection* con, int id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::ResultSet> res;
+
+	pstmt.reset(con->prepareStatement(
+		"SELECT c.cnst_id cnst_id, c.name name, c.description description, s_a.confirmed FROM cnst c "
+		"INNER JOIN student_award s_a ON s_a.cnst_id = c.cnst_id WHERE s_a.stdt_id = ?"
+	));
+
+	pstmt->setInt(1, id);
+
+	res.reset(pstmt->executeQuery());
+	return res;
+}
+
+// Get all awards given to all students that graduate a certain year
+std::auto_ptr<sql::ResultSet> Student::get_awards_grad(sql::Connection* con, int grad_year) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::ResultSet> res;
+
+	pstmt.reset(con->prepareStatement(
+		"SELECT c.cnst_id cnst_id, s.stdt_id stdt_id, s.last_name last_name, s.first_name first_name, s.pref_name pref_name, c.name name, c.description description, s_a.confirmed "
+		"FROM student_award s_a INNER JOIN student s ON s_a.stdt_id = s.stdt_id "
+		"INNER JOIN cnst c ON s_a.cnst_id = c.cnst_id "
+		"WHERE s.grad_year=?"
 	));
 
 	pstmt->setInt(1, grad_year);

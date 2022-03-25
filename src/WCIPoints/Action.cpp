@@ -118,11 +118,11 @@ std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, bool archive) {
 
 	if (!archive)
 		res.reset(stmt->executeQuery(
-			"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL"
+			"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL ORDER BY name"
 		));
 	else
 		res.reset(stmt->executeQuery(
-			"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a INNER JOIN action_archive a_a ON a_a.actn_id=a.actn_id"
+			"SELECT a.actn_id id, a.type type, a.name name, a.points points FROM action a INNER JOIN action_archive a_a ON a_a.actn_id=a.actn_id ORDER BY name"
 		));
 
 	return res;
@@ -134,11 +134,11 @@ std::auto_ptr<sql::ResultSet> Action::get(sql::Connection* con, int type, bool a
 
 	if (!archive)
 		pstmt.reset(con->prepareStatement(
-			"SELECT a.actn_id id, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=?"
+			"SELECT a.actn_id id, a.name name, a.points points FROM action a LEFT JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a_a.actn_id IS NULL AND a.type=? ORDER BY name"
 		));
 	else
 		pstmt.reset(con->prepareStatement(
-			"SELECT a.actn_id id, a.name name, a.points points FROM action a INNER JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a.type=?"
+			"SELECT a.actn_id id, a.name name, a.points points FROM action a INNER JOIN action_archive a_a ON a_a.actn_id=a.actn_id WHERE a.type=? ORDER BY name"
 		));
 
 	pstmt->setInt(1, type);
