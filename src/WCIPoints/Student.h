@@ -17,6 +17,8 @@ namespace Student {
 
 	void assign_action(sql::Connection* con, int id, int action_id, int year); // Assign an action to a student
 	void remove_action(sql::Connection* con, int id, int action_id, int year); // Remove an action from a student
+	void confirm_student_award(sql::Connection* con, int id, int student_id);
+	void unconfirm_student_award(sql::Connection* con, int id, int student_id);
 
 	void edit_OEN(sql::Connection* con, int id, CString OEN);
 	void edit_last_name(sql::Connection* con, int id, CString last_name);
@@ -32,5 +34,7 @@ namespace Student {
 
 	std::auto_ptr<sql::ResultSet> get_actions(sql::Connection* con, int id); // Get all actions of a certain student
 	std::auto_ptr<sql::ResultSet> get_awards(sql::Connection* con, int id); // Get all awards of a certain student
-	std::auto_ptr<sql::ResultSet> get_awards_grad(sql::Connection* con, int grad_year); // Get all awards given to all students that graduate a certain year
+	// Get all awards given to all students that graduate a certain year, specifying whether to see already confirmed awards
+	std::auto_ptr<sql::ResultSet> get_awards_grad(sql::Connection* con, int grad_year, bool confirmed);
+	std::auto_ptr<sql::ResultSet> get_awards_all(sql::Connection* con); // Get all awards for all years
 }

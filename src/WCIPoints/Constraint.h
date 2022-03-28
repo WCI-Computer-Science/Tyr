@@ -61,4 +61,5 @@ namespace Constraint
 	std::auto_ptr<sql::ResultSet> get(sql::Connection* con, bool award=false, bool archive=false); // Get all constraints, and see only awards if award is set to true
 	std::auto_ptr<sql::ResultSet> get_basic(sql::Connection* con, int id); // Get the info on a basic constraint
 	std::auto_ptr<sql::ResultSet> get_compound(sql::Connection* con, int id); // Get all sub-constraints of a compound constraint, and each one's info
+	std::auto_ptr<sql::ResultSet> get_compound_except(sql::Connection* con, int id); // Get constraints that are not sub-constraints of a compound constraint, and each one's info
 }

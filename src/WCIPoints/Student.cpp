@@ -70,6 +70,26 @@ void Student::remove_action(sql::Connection* con, int id, int action_id, int yea
 	pstmt->execute();
 }
 
+// Confirm a student's award
+void Student::confirm_student_award(sql::Connection* con, int id, int cnst_id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("UPDATE student_award SET confirmed=true WHERE stdt_id=? AND cnst_id=?"));
+
+	pstmt->setInt(1, id);
+	pstmt->setInt(2, cnst_id);
+
+	pstmt->execute();
+}
+
+// Unconfirm a student's award
+void Student::unconfirm_student_award(sql::Connection* con, int id, int cnst_id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("UPDATE student_award SET confirmed=false WHERE stdt_id=? AND cnst_id=?"));
+
+	pstmt->setInt(1, id);
+	pstmt->setInt(2, cnst_id);
+
+	pstmt->execute();
+}
+
 
 // Edit various student attributes
 void Student::edit_OEN(sql::Connection* con, int id, CString OEN) {
@@ -141,7 +161,8 @@ std::auto_ptr<sql::ResultSet> Student::get(sql::Connection* con) {
 	std::auto_ptr<sql::ResultSet> res;
 
 	res.reset(stmt->executeQuery(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student ORDER BY grad_year, last_name"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student "
+		"ORDER BY grad_year, first_name, pref_name, last_name"
 	));
 
 	return res;
@@ -153,7 +174,8 @@ std::auto_ptr<sql::ResultSet> Student::get(sql::Connection* con, int year) {
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year<=? AND grad_year>=? ORDER BY last_name"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year<=? AND grad_year>=? "
+		"ORDER BY grad_year, first_name, pref_name, last_name"
 	));
 
 	pstmt->setInt(1, year);
@@ -169,7 +191,8 @@ std::auto_ptr<sql::ResultSet> Student::get_start(sql::Connection* con, int start
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year=? ORDER BY last_name"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE start_year=? "
+		"ORDER BY grad_year, first_name, pref_name, last_name"
 	));
 
 	pstmt->setInt(1, start_year);
@@ -184,7 +207,8 @@ std::auto_ptr<sql::ResultSet> Student::get_grad(sql::Connection* con, int grad_y
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE grad_year=? ORDER BY last_name"
+		"SELECT stdt_id id, oen, last_name, first_name, pref_name, start_year, grad_year FROM student WHERE grad_year=? "
+		"ORDER BY grad_year, first_name, pref_name, last_name"
 	));
 
 	pstmt->setInt(1, grad_year);
@@ -217,8 +241,9 @@ std::auto_ptr<sql::ResultSet> Student::get_awards(sql::Connection* con, int id) 
 	std::auto_ptr<sql::ResultSet> res;
 
 	pstmt.reset(con->prepareStatement(
-		"SELECT c.cnst_id cnst_id, c.name name, c.description description, s_a.confirmed FROM cnst c "
-		"INNER JOIN student_award s_a ON s_a.cnst_id = c.cnst_id WHERE s_a.stdt_id = ?"
+		"SELECT c.cnst_id cnst_id, c.name name, c.description description, s_a.confirmed confirmed FROM cnst c "
+		"INNER JOIN student_award s_a ON s_a.cnst_id = c.cnst_id WHERE s_a.stdt_id=? "
+		"ORDER BY confirmed, name"
 	));
 
 	pstmt->setInt(1, id);
@@ -227,20 +252,43 @@ std::auto_ptr<sql::ResultSet> Student::get_awards(sql::Connection* con, int id) 
 	return res;
 }
 
-// Get all awards given to all students that graduate a certain year
-std::auto_ptr<sql::ResultSet> Student::get_awards_grad(sql::Connection* con, int grad_year) {
+// Get all awards given to all students that graduate a certain year, specifying whether to see already confirmed awards
+std::auto_ptr<sql::ResultSet> Student::get_awards_grad(sql::Connection* con, int grad_year, bool confirmed) {
 	std::auto_ptr<sql::PreparedStatement> pstmt;
 	std::auto_ptr<sql::ResultSet> res;
 
-	pstmt.reset(con->prepareStatement(
-		"SELECT c.cnst_id cnst_id, s.stdt_id stdt_id, s.last_name last_name, s.first_name first_name, s.pref_name pref_name, c.name name, c.description description, s_a.confirmed "
-		"FROM student_award s_a INNER JOIN student s ON s_a.stdt_id = s.stdt_id "
-		"INNER JOIN cnst c ON s_a.cnst_id = c.cnst_id "
-		"WHERE s.grad_year=?"
-	));
+	if (confirmed)
+		pstmt.reset(con->prepareStatement(
+			"SELECT c.cnst_id cnst_id, s.stdt_id stdt_id, s.last_name last_name, s.first_name first_name, s.pref_name pref_name, c.name name, c.description description, s_a.confirmed confirmed, s.grad_year grad_year "
+			"FROM student_award s_a INNER JOIN student s ON s_a.stdt_id = s.stdt_id "
+			"INNER JOIN cnst c ON s_a.cnst_id = c.cnst_id WHERE s.grad_year=? "
+			"ORDER BY first_name, pref_name, last_name, confirmed, name"
+		));
+	else
+		pstmt.reset(con->prepareStatement(
+			"SELECT c.cnst_id cnst_id, s.stdt_id stdt_id, s.last_name last_name, s.first_name first_name, s.pref_name pref_name, c.name name, c.description description, s_a.confirmed confirmed, s.grad_year grad_year "
+			"FROM student_award s_a INNER JOIN student s ON s_a.stdt_id = s.stdt_id "
+			"INNER JOIN cnst c ON s_a.cnst_id = c.cnst_id WHERE s.grad_year=? AND s_a.confirmed=false "
+			"ORDER BY first_name, pref_name, last_name, name"
+		));
 
 	pstmt->setInt(1, grad_year);
 
 	res.reset(pstmt->executeQuery());
+	return res;
+}
+
+// Get all awards for all years
+std::auto_ptr<sql::ResultSet> Student::get_awards_all(sql::Connection* con) {
+	std::auto_ptr<sql::Statement> stmt(con->createStatement());
+	std::auto_ptr<sql::ResultSet> res;
+
+	res.reset(stmt->executeQuery(
+		"SELECT c.cnst_id cnst_id, s.stdt_id stdt_id, s.last_name last_name, s.first_name first_name, s.pref_name pref_name, c.name name, c.description description, s.grad_year grad_year "
+		"FROM student_award s_a INNER JOIN student s ON s_a.stdt_id = s.stdt_id "
+		"INNER JOIN cnst c ON s_a.cnst_id = c.cnst_id "
+		"ORDER BY grad_year, first_name, pref_name, last_name, name"
+	));
+
 	return res;
 }

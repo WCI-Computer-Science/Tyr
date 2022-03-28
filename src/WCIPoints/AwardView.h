@@ -276,3 +276,52 @@ public:
 	int m_award_x;
 	int m_award_y;
 };
+
+
+
+// Edit compound award/constraint dialog
+
+class CConstraintEditCompoundDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CConstraintEditCompoundDlg)
+
+public:
+	// requires current award info to construct
+	CConstraintEditCompoundDlg(int award_type, CString name, CString description, int id, CWnd* pParent = nullptr);
+	virtual ~CConstraintEditCompoundDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_AWARD_COMPOUND_EDIT };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_cnst_id;
+
+	int m_award_type;
+	CStatic m_award_type_description;
+
+	CListCtrl m_constraint_list;
+	int constraintSelectionMark;
+	CListCtrl m_subconstraint_list;
+	int subconstraintSelectionMark;
+	void loadConstraintList();
+
+public:
+	CString m_award_name;
+	CString m_award_description;
+
+	afx_msg void OnLvnItemchangedConstraintList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnItemchangedSubconstraintList(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedAwardInclude();
+	afx_msg void OnBnClickedAwardUninclude();
+};

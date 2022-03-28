@@ -24,6 +24,7 @@
 
 #include "StudentView.h"
 #include "Student.h"
+#include "Constraint.h"
 #include "Action.h"
 
 #ifdef _DEBUG
@@ -556,6 +557,7 @@ void CStudentView::OnBnClickedRemoveStudent()
 }
 
 // Assign actions to currently selected student
+// TODO: make sure year cannot be less than start year, or greater than grad year
 void CStudentView::OnBnClickedAssignActions()
 {
 	if (selectionMark == -1)
@@ -591,35 +593,74 @@ void CStudentView::OnBnClickedEditActions()
 		student_name += _T("(") + m_student_list.GetItemText(selectionMark, 2) + _T(") ");
 	student_name += m_student_list.GetItemText(selectionMark, 3);
 
-	CStudentEditActionsDlg studentEditActionsDlg(CString(_T("Manage actions")), CString(_T("Manage actions of ") + student_name), m_student_list.GetItemData(selectionMark));
+	CStudentEditActionsDlg studentEditActionsDlg(_T("Manage actions"), _T("Manage actions of ") + student_name, m_student_list.GetItemData(selectionMark));
 	studentEditActionsDlg.DoModal();
 }
 
-// See all awards given to the currently selected student
+// See and manage all awards given to the currently selected student
 void CStudentView::OnBnClickedSeeStudentAwards()
 {
 	if (selectionMark == -1)
 		return;
 
+	CString student_name = m_student_list.GetItemText(selectionMark, 1) + _T(" ");
+	if (m_student_list.GetItemText(selectionMark, 2).GetLength() > 0)
+		student_name += _T("(") + m_student_list.GetItemText(selectionMark, 2) + _T(") ");
+	student_name += m_student_list.GetItemText(selectionMark, 3);
+
+	CStudentEditAwardsDlg studentEditAwardsDlg(_T("See awards"), _T("See awards of ") + student_name, m_student_list.GetItemData(selectionMark));
+	studentEditAwardsDlg.DoModal();
 }
 
 
-// Perform calculation of awards
+// Perform calculation of awards for all students who graduate the current year
 void CStudentView::OnBnClickedEvaluateAwards()
 {
-	// TODO: Add your control notification handler code here
+	CString yearString;
+	yearString.Format(_T("%d"), m_year);
+	int res = MessageBox(
+		_T("Please confirm: evaluate eligible awards for all students who graduate in the year ") + yearString,
+		_T("Confirm evaluate"),
+		MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2
+	);
+	if (res != IDOK)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::auto_ptr<sql::ResultSet> res = Student::get_grad(con.get(), m_year);
+		while (res->next()) {
+			int student_id = res->getInt("id");
+			Constraint::assign_awards(con.get(), student_id);
+		}
+		AfxMessageBox(_T("All awards assigned out.\nTo confirm these awards (mark as handed out), see \"Hand out awards\"."));
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
 }
 
 // Open up interface to select awards to hand out or directly hand out all awards, and see all awards that haven't been handed out
 void CStudentView::OnBnClickedHandOutAwards()
 {
-	// TODO: Add your control notification handler code here
+	CString yearString;
+	yearString.Format(_T("%d"), m_year);
+
+	CHandOutAwardsDlg handOutAwardsDlg(_T("Hand out awards"), _T("Hand out awards for graduating class of ") + yearString, m_year);
+	handOutAwardsDlg.DoModal();
 }
 
-// Open up interface to see all awards by year
+// Open up interface to see all awards from all years
+// Allow for deletion of awards as well
 void CStudentView::OnBnClickedSeeAwards()
 {
-	// TODO: Add your control notification handler code here
+	CManageAllAwardsDlg manageAllAwardsDlg(_T("Manage all awards"), _T("Manage all awards"), m_year);
+	manageAllAwardsDlg.DoModal();
 }
 
 
@@ -813,7 +854,7 @@ void CStudentAssignActionDlg::OnLbnSelchangeActionTypeList()
 
 
 
-// CStudentSeeActionsDlg dialog
+// CStudentEditActionsDlg dialog
 
 IMPLEMENT_DYNAMIC(CStudentEditActionsDlg, CDialogEx)
 
@@ -952,7 +993,7 @@ BEGIN_MESSAGE_MAP(CStudentEditActionsDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CStudentSeeActionsDlg message handlers
+// CStudentEditActionsDlg message handlers
 
 // Keep track of current selection for other functions (select row in list control)
 // Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
@@ -991,6 +1032,623 @@ void CStudentEditActionsDlg::OnBnClickedStudentDeleteAction()
 			Student::remove_action(con.get(), m_student_id, m_action_list.GetItemData(selectionMark), _ttoi(m_action_list.GetItemText(selectionMark, 3)));
 			loadTypeData();
 			AfxMessageBox(_T("Action deleted."));
+			selectionMark = -1;
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+
+
+
+
+
+// CStudentEditAwardsDlg dialog
+
+IMPLEMENT_DYNAMIC(CStudentEditAwardsDlg, CDialogEx)
+
+CStudentEditAwardsDlg::CStudentEditAwardsDlg(CString header, CString title, int student_id, CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_STUDENT_MANAGE_LIST, pParent)
+	, m_header(header)
+	, m_title_text(title)
+	, m_student_id(student_id)
+	, selectionMark(-1)
+{
+
+}
+
+CStudentEditAwardsDlg::~CStudentEditAwardsDlg()
+{
+}
+
+void CStudentEditAwardsDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_STUDENT_LIST, m_award_list);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_STUDENT_MANAGE, m_toggle_handout_award);
+}
+
+BOOL CStudentEditAwardsDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// Initialize award list
+	m_award_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	// Insert dummy column so LVCFMT_FIXED_WIDTH works properly (see Remarks of LVCOLUMN struct)
+	m_award_list.InsertColumn(0, &LVCOLUMN());
+
+	m_col_name.mask = m_col_desc.mask = m_col_confirmed.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+
+	m_col_name.fmt = m_col_desc.fmt = m_col_confirmed.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
+
+	m_col_name.cx = 150;
+	m_col_desc.cx = 210;
+	m_col_confirmed.cx = 75;
+
+	m_col_name.pszText = _T("Name");
+	m_col_desc.pszText = _T("Description");
+	m_col_confirmed.pszText = _T("Confirmed");
+
+	m_award_list.InsertColumn(1, &m_col_name);
+	m_award_list.InsertColumn(2, &m_col_desc);
+	m_award_list.InsertColumn(3, &m_col_confirmed);
+
+	m_award_list.DeleteColumn(0);
+
+	// Initialize dialog text
+	SetWindowText(m_header);
+	m_title.SetWindowTextW(m_title_text);
+
+	m_titleFont.CreateFontW(
+		16,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	m_title.SetFont(&m_titleFont);
+
+	m_toggle_handout_award.SetWindowTextW(_T("Toggle Confirm"));
+
+	loadConstraintList();
+
+	return TRUE;
+}
+
+// Load awards for student
+void CStudentEditAwardsDlg::loadConstraintList() {
+
+	m_award_list.DeleteAllItems();
+
+	// Fetch data from MySQL
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::auto_ptr<sql::ResultSet> res = Student::get_awards(con.get(), m_student_id);
+		int i = 0;
+		while (res->next()) {
+			std::string name = (std::string)res->getString("name");
+			m_award_list.InsertItem(i, CString(name.c_str()));
+
+			std::string desc = (std::string)res->getString("description");
+			m_award_list.SetItemText(i, 1, CString(desc.c_str()));
+
+			std::string confirmed = res->getBoolean("confirmed") ? "yes" : "no";
+			m_award_list.SetItemText(i, 2, CString(confirmed.c_str()));
+
+			m_award_list.SetItemData(i, res->getInt("cnst_id"));
+
+			++i;
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+
+BEGIN_MESSAGE_MAP(CStudentEditAwardsDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_STUDENT_MANAGE, &CStudentEditAwardsDlg::OnBnClickedStudentToggleAward)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_STUDENT_LIST, &CStudentEditAwardsDlg::OnLvnItemchangedAwardList)
+END_MESSAGE_MAP()
+
+
+// CStudentEditAwardsDlg message handlers
+
+// Keep track of current selection for other functions (select row in list control)
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
+void CStudentEditAwardsDlg::OnLvnItemchangedAwardList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED)
+			selectionMark = pNMLV->iItem;
+		else
+			selectionMark = -1;
+	}
+
+	*pResult = 0;
+}
+
+// Toggle whether the student's award has been confirmed
+void CStudentEditAwardsDlg::OnBnClickedStudentToggleAward()
+{
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		// args in order: student_id, cnst_id
+		if (m_award_list.GetItemText(selectionMark, 2) == _T("no")) {
+			Student::confirm_student_award(con.get(), m_student_id, m_award_list.GetItemData(selectionMark));
+			loadConstraintList();
+			AfxMessageBox(_T("Award handed out."));
+		}
+		else if (m_award_list.GetItemText(selectionMark, 2) == _T("yes")) {
+			Student::unconfirm_student_award(con.get(), m_student_id, m_award_list.GetItemData(selectionMark));
+			loadConstraintList();
+			AfxMessageBox(_T("Award unhanded out."));
+		}
+		selectionMark = -1;
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+
+
+
+
+
+// CHandOutAwardsDlg dialog
+
+IMPLEMENT_DYNAMIC(CHandOutAwardsDlg, CDialogEx)
+
+CHandOutAwardsDlg::CHandOutAwardsDlg(CString header, CString title, int year, CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_STUDENT_AWARD_LIST, pParent)
+	, m_header(header)
+	, m_title_text(title)
+	, m_year(year)
+	, selectionMark(-1)
+{
+
+}
+
+CHandOutAwardsDlg::~CHandOutAwardsDlg()
+{
+}
+
+void CHandOutAwardsDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_STUDENT_AWARD_LIST, m_award_list);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_STUDENT_AWARD_CHECK, m_see_confirmed);
+	DDX_Control(pDX, IDC_STUDENT_MANAGE, m_toggle_handout_award);
+}
+
+BOOL CHandOutAwardsDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// Initialize action list
+	m_award_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	// Insert dummy column so LVCFMT_FIXED_WIDTH works properly (see Remarks of LVCOLUMN struct)
+	m_award_list.InsertColumn(0, &LVCOLUMN());
+
+	m_col_stdt_first_name.mask = m_col_stdt_last_name.mask =
+		m_col_award_name.mask = m_col_award_desc.mask = m_col_award_confirmed.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+
+	m_col_stdt_first_name.fmt = m_col_stdt_last_name.fmt =
+		m_col_award_name.fmt = m_col_award_desc.fmt = m_col_award_confirmed.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
+
+	m_col_stdt_first_name.cx = 130;
+	m_col_stdt_last_name.cx = 100;
+	m_col_award_name.cx = 150;
+	m_col_award_desc.cx = 210;
+	m_col_award_confirmed.cx = 75;
+
+	m_col_stdt_first_name.pszText = _T("First Name");
+	m_col_stdt_last_name.pszText = _T("Last Name");
+	m_col_award_name.pszText = _T("Award Name");
+	m_col_award_desc.pszText = _T("Award Description");
+	m_col_award_confirmed.pszText = _T("Confirmed");
+
+	m_award_list.InsertColumn(1, &m_col_stdt_first_name);
+	m_award_list.InsertColumn(2, &m_col_stdt_last_name);
+	m_award_list.InsertColumn(3, &m_col_award_name);
+	m_award_list.InsertColumn(4, &m_col_award_desc);
+	m_award_list.InsertColumn(5, &m_col_award_confirmed);
+
+	m_award_list.DeleteColumn(0);
+
+	// Initialize dialog text
+	SetWindowText(m_header);
+	m_title.SetWindowTextW(m_title_text);
+
+	m_titleFont.CreateFontW(
+		20,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	m_title.SetFont(&m_titleFont);
+
+	m_see_confirmed.SetWindowTextW(_T("See already confirmed awards"));
+	m_toggle_handout_award.SetWindowTextW(_T("Toggle Confirm"));
+
+	loadConstraintList();
+
+	return TRUE;
+}
+
+// Load awards for this year
+void CHandOutAwardsDlg::loadConstraintList() {
+
+	m_award_list.DeleteAllItems();
+	m_ids.clear();
+
+	// Fetch data from MySQL
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::auto_ptr<sql::ResultSet> res = Student::get_awards_grad(con.get(), m_year, m_see_confirmed.GetCheck() == BST_CHECKED);
+		int i = 0;
+		while (res->next()) {
+			int award_id = res->getInt("cnst_id"), student_id = res->getInt("stdt_id");
+
+			std::string first_name = (std::string)res->getString("first_name");
+			std::string pref_name = (std::string)res->getString("pref_name");
+			if (pref_name.size() > 0)
+				first_name += " (" + pref_name + ")";
+			m_award_list.InsertItem(i, CString(first_name.c_str()));
+
+			std::string last_name = (std::string)res->getString("last_name");
+			m_award_list.SetItemText(i, 1, CString(last_name.c_str()));
+
+			std::string name = (std::string)res->getString("name");
+			m_award_list.SetItemText(i, 2, CString(name.c_str()));
+
+			std::string desc = (std::string)res->getString("description");
+			m_award_list.SetItemText(i, 3, CString(desc.c_str()));
+
+			std::string confirmed = res->getBoolean("confirmed") ? "yes" : "no";
+			m_award_list.SetItemText(i, 4, CString(confirmed.c_str()));
+
+			// Set item data to point to index of id vector, if the order of m_award_list changes (unsure if this is possible, but setting just to be safe)
+			m_award_list.SetItemData(i, i);
+
+			m_ids.push_back({ student_id, award_id });
+
+			++i;
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+BEGIN_MESSAGE_MAP(CHandOutAwardsDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_STUDENT_AWARD_CHECK, &CHandOutAwardsDlg::OnBnClickedSeeUnconfirmed)
+	ON_BN_CLICKED(IDC_STUDENT_MANAGE, &CHandOutAwardsDlg::OnBnClickedStudentToggleAward)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_STUDENT_AWARD_LIST, &CHandOutAwardsDlg::OnLvnItemchangedAwardList)
+END_MESSAGE_MAP()
+
+
+// CStudentHandOutAwardsDlg message handlers
+
+// Keep track of current selection for other functions (select row in list control)
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
+void CHandOutAwardsDlg::OnLvnItemchangedAwardList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED)
+			selectionMark = pNMLV->iItem;
+		else
+			selectionMark = -1;
+	}
+
+	*pResult = 0;
+}
+
+// Changed whether confirmed awards are seen
+void CHandOutAwardsDlg::OnBnClickedSeeUnconfirmed()
+{
+	loadConstraintList();
+}
+
+// Toggle whether the student's award has been confirmed
+void CHandOutAwardsDlg::OnBnClickedStudentToggleAward()
+{
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::pair<int, int> id_pair = m_ids[m_award_list.GetItemData(selectionMark)];
+		int student_id = id_pair.first, award_id = id_pair.second;
+
+		// args in order: student_id, cnst_id
+		if (m_award_list.GetItemText(selectionMark, 5) == _T("no")) {
+			Student::confirm_student_award(con.get(), student_id, award_id);
+			loadConstraintList();
+			AfxMessageBox(_T("Award handed out."));
+		}
+		else if (m_award_list.GetItemText(selectionMark, 5) == _T("yes")) {
+			Student::unconfirm_student_award(con.get(), student_id, award_id);
+			loadConstraintList();
+			AfxMessageBox(_T("Award unhanded out."));
+		}
+		selectionMark = -1;
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+
+
+
+
+
+// CManageAllAwardsDlg dialog
+
+IMPLEMENT_DYNAMIC(CManageAllAwardsDlg, CDialogEx)
+
+CManageAllAwardsDlg::CManageAllAwardsDlg(CString header, CString title, int year, CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_STUDENT_AWARD_LIST, pParent)
+	, m_header(header)
+	, m_title_text(title)
+	, m_year(year)
+	, selectionMark(-1)
+{
+
+}
+
+CManageAllAwardsDlg::~CManageAllAwardsDlg()
+{
+}
+
+void CManageAllAwardsDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_STUDENT_AWARD_LIST, m_award_list);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_STUDENT_AWARD_CHECK, m_see_all_years);
+	DDX_Control(pDX, IDC_STUDENT_MANAGE, m_remove_award);
+}
+
+BOOL CManageAllAwardsDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// Initialize award list
+	m_award_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	// Insert dummy column so LVCFMT_FIXED_WIDTH works properly (see Remarks of LVCOLUMN struct)
+	m_award_list.InsertColumn(0, &LVCOLUMN());
+
+	m_col_stdt_first_name.mask = m_col_stdt_last_name.mask =
+		m_col_award_name.mask = m_col_award_desc.mask = m_col_grad_year.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+
+	m_col_stdt_first_name.fmt = m_col_stdt_last_name.fmt =
+		m_col_award_name.fmt = m_col_award_desc.fmt = m_col_grad_year.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH;
+
+	m_col_stdt_first_name.cx = 130;
+	m_col_stdt_last_name.cx = 100;
+	m_col_award_name.cx = 150;
+	m_col_award_desc.cx = 210;
+	m_col_grad_year.cx = 75;
+
+	m_col_stdt_first_name.pszText = _T("First Name");
+	m_col_stdt_last_name.pszText = _T("Last Name");
+	m_col_award_name.pszText = _T("Award Name");
+	m_col_award_desc.pszText = _T("Award Description");
+	m_col_grad_year.pszText = _T("Grad Year");
+
+	m_award_list.InsertColumn(1, &m_col_stdt_first_name);
+	m_award_list.InsertColumn(2, &m_col_stdt_last_name);
+	m_award_list.InsertColumn(3, &m_col_award_name);
+	m_award_list.InsertColumn(4, &m_col_award_desc);
+	m_award_list.InsertColumn(5, &m_col_grad_year);
+
+	m_award_list.DeleteColumn(0);
+
+	// Initialize dialog text
+	SetWindowText(m_header);
+	m_title.SetWindowTextW(m_title_text);
+
+	m_titleFont.CreateFontW(
+		20,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	m_title.SetFont(&m_titleFont);
+
+	m_see_all_years.SetWindowTextW(_T("See awards from all years"));
+	m_remove_award.SetWindowTextW(_T("Delete"));
+
+	loadConstraintList();
+
+	return TRUE;
+}
+
+// Load awards for this year
+void CManageAllAwardsDlg::loadConstraintList() {
+
+	m_award_list.DeleteAllItems();
+	m_ids.clear();
+
+	// Fetch data from MySQL
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		std::auto_ptr<sql::ResultSet> res;
+
+		if (m_see_all_years.GetCheck() == BST_CHECKED) {
+			res = Student::get_awards_all(con.get());
+		}
+		else {
+			res = Student::get_awards_grad(con.get(), m_year, true);
+		}
+
+		int i = 0;
+		while (res->next()) {
+			int award_id = res->getInt("cnst_id"), student_id = res->getInt("stdt_id");
+
+			std::string first_name = (std::string)res->getString("first_name");
+			std::string pref_name = (std::string)res->getString("pref_name");
+			if (pref_name.size() > 0)
+				first_name += " (" + pref_name + ")";
+			m_award_list.InsertItem(i, CString(first_name.c_str()));
+
+			std::string last_name = (std::string)res->getString("last_name");
+			m_award_list.SetItemText(i, 1, CString(last_name.c_str()));
+
+			std::string name = (std::string)res->getString("name");
+			m_award_list.SetItemText(i, 2, CString(name.c_str()));
+
+			std::string desc = (std::string)res->getString("description");
+			m_award_list.SetItemText(i, 3, CString(desc.c_str()));
+
+			std::string year = res->getString("grad_year");
+			m_award_list.SetItemText(i, 4, CString(year.c_str()));
+
+			// Set item data to point to index of id vector, if the order of m_award_list changes (unsure if this is possible, but setting just to be safe)
+			m_award_list.SetItemData(i, i);
+
+			m_ids.push_back({ student_id, award_id });
+
+			++i;
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+BEGIN_MESSAGE_MAP(CManageAllAwardsDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_STUDENT_AWARD_CHECK, &CManageAllAwardsDlg::OnBnClickedSeeAllYears)
+	ON_BN_CLICKED(IDC_STUDENT_MANAGE, &CManageAllAwardsDlg::OnBnClickedStudentRemoveAward)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_STUDENT_AWARD_LIST, &CManageAllAwardsDlg::OnLvnItemchangedAwardList)
+END_MESSAGE_MAP()
+
+
+// CManageAllAwardsDlg message handlers
+
+// Keep track of current selection for other functions (select row in list control)
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
+void CManageAllAwardsDlg::OnLvnItemchangedAwardList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED)
+			selectionMark = pNMLV->iItem;
+		else
+			selectionMark = -1;
+	}
+
+	*pResult = 0;
+}
+
+// Changed whether confirmed awards are seen
+void CManageAllAwardsDlg::OnBnClickedSeeAllYears()
+{
+	loadConstraintList();
+}
+
+// Toggle whether the student's award has been confirmed
+void CManageAllAwardsDlg::OnBnClickedStudentRemoveAward()
+{
+	if (selectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		int res = MessageBox(
+			_T(
+				"Removing a student's award may be permanent! It is suggested you keep all awards as reference for future years.\n\n"
+				"Are you sure you want to delete this student's award?"
+			),
+			_T("Confirm deletion"),
+			MB_OKCANCEL | MB_ICONSTOP | MB_DEFBUTTON2
+		);
+
+		if (res == IDOK) {
+			std::pair<int, int> id_pair = m_ids[m_award_list.GetItemData(selectionMark)];
+			int student_id = id_pair.first, award_id = id_pair.second;
+
+			// args in order: cnst_id, stdt_id
+			Constraint::remove_student_award(con.get(), award_id, student_id);
+			loadConstraintList();
+			AfxMessageBox(_T("Student award deleted."));
 			selectionMark = -1;
 		}
 	}

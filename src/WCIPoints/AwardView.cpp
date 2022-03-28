@@ -595,7 +595,14 @@ void CAwardView::OnBnClickedEditConstraint()
 		CString name = m_constraint_list.GetItemText(selectionMark, 0), desc = m_constraint_list.GetItemText(selectionMark, 1);
 
 		if (current_cnst.type <= 1) { // Compound constraint
-			// TODO: finish editing of compound constraints (need to take into account cycles)
+			CConstraintEditCompoundDlg constraintEditCompoundDlg(current_cnst.type, name, desc, current_cnst.id);
+			if (constraintEditCompoundDlg.DoModal() == IDOK) {
+				Constraint::edit_name(con.get(), current_cnst.id, constraintEditCompoundDlg.m_award_name);
+				Constraint::edit_description(con.get(), current_cnst.id, constraintEditCompoundDlg.m_award_description);
+
+				// Reload
+				loadConstraintList();
+			}
 		}
 		else { // Basic constraint
 			// Get constraint info
@@ -1602,3 +1609,228 @@ END_MESSAGE_MAP()
 
 
 // CConstraintEditBasicDlg message handlers
+
+
+
+
+
+
+// CConstraintEditCompoundDlg dialog
+
+IMPLEMENT_DYNAMIC(CConstraintEditCompoundDlg, CDialogEx)
+
+CConstraintEditCompoundDlg::CConstraintEditCompoundDlg(int award_type, CString name, CString description, int id, CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_AWARD_COMPOUND_EDIT, pParent)\
+	, m_award_type(award_type)
+	, m_award_name(name)
+	, m_award_description(description)
+	, m_cnst_id(id)
+	, constraintSelectionMark(-1)
+	, subconstraintSelectionMark(-1)
+{
+
+}
+
+CConstraintEditCompoundDlg::~CConstraintEditCompoundDlg()
+{
+}
+
+BOOL CConstraintEditCompoundDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	m_constraint_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+	m_constraint_list.InsertColumn(0, _T("Awards/Constraints:"), LVCFMT_LEFT, 220, 0);
+	m_subconstraint_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+	m_subconstraint_list.InsertColumn(0, _T("Awards/Constraints:"), LVCFMT_LEFT, 220, 0);
+
+	m_titleFont.CreateFontW(
+		18,
+		0,
+		0,
+		0,
+		FW_NORMAL,
+		FALSE,
+		FALSE,
+		0,
+		ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Arial")
+	);
+
+	m_title.SetFont(&m_titleFont);
+
+	// award_type is 0 or 1
+	if (m_award_type == 0) { // OR constraint
+		m_award_type_description.SetWindowTextW(_T(
+			"Refer to the included constraints/awards at the bottom right. "
+			"The student must satisfy AT LEAST ONE of them for this award/constraint to be satisfied. "
+			"Include other criteria or uninclude them below."
+		));
+	}
+	else { // AND constraint
+		m_award_type_description.SetWindowTextW(_T(
+			"Refer to the included constraints/awards at the bottom right. "
+			"The student must satisfy ALL OF THEM for this award/constraint to be satisfied. "
+			"Include other criteria or uninclude them below."
+		));
+	}
+
+	loadConstraintList();
+
+	return TRUE;
+}
+
+void CConstraintEditCompoundDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_DESCRIPTION, m_award_type_description);
+	DDX_Text(pDX, IDC_AWARD_NAME, m_award_name);
+	DDV_MaxChars(pDX, m_award_name, 64);
+	DDV_MinChars(pDX, m_award_name, 1);
+	DDX_Text(pDX, IDC_AWARD_DESCRIPTION, m_award_description);
+	DDV_MaxChars(pDX, m_award_description, 64);
+	DDX_Control(pDX, IDC_TITLE, m_title);
+	DDX_Control(pDX, IDC_CONSTRAINT_LIST, m_constraint_list);
+	DDX_Control(pDX, IDC_SUBCONSTRAINT_LIST, m_subconstraint_list);
+}
+
+// Load unincluded and included constraints
+void CConstraintEditCompoundDlg::loadConstraintList() {
+
+	m_constraint_list.DeleteAllItems();
+	m_subconstraint_list.DeleteAllItems();
+	constraintSelectionMark = -1;
+	subconstraintSelectionMark = -1;
+
+	// Fetch data from MySQL
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		// Load unincluded constraints
+		std::auto_ptr<sql::ResultSet> res = Constraint::get_compound_except(con.get(), m_cnst_id);
+		int i = 0;
+		while (res->next()) {
+			std::string name = res->getString("name");
+			m_constraint_list.InsertItem(i, CString(name.c_str()));
+
+			// Set item data to be id
+			int id = res->getInt("id");
+			m_constraint_list.SetItemData(i, id);
+
+			++i;
+		}
+
+		// Load included constraints
+		res = Constraint::get_compound(con.get(), m_cnst_id);
+		i = 0;
+		while (res->next()) {
+			std::string name = res->getString("name");
+			m_subconstraint_list.InsertItem(i, CString(name.c_str()));
+
+			// Set item data to be id
+			int id = res->getInt("id");
+			m_subconstraint_list.SetItemData(i, id);
+
+			++i;
+		}
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+BEGIN_MESSAGE_MAP(CConstraintEditCompoundDlg, CDialogEx)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_CONSTRAINT_LIST, &CConstraintEditCompoundDlg::OnLvnItemchangedConstraintList)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_SUBCONSTRAINT_LIST, &CConstraintEditCompoundDlg::OnLvnItemchangedSubconstraintList)
+	ON_BN_CLICKED(IDC_AWARD_INCLUDE, &CConstraintEditCompoundDlg::OnBnClickedAwardInclude)
+	ON_BN_CLICKED(IDC_AWARD_UNINCLUDE, &CConstraintEditCompoundDlg::OnBnClickedAwardUninclude)
+END_MESSAGE_MAP()
+
+
+// CConstraintEditBasicDlg message handlers
+
+// Keep track of constraint list selection mark for unincluded constraints
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
+void CConstraintEditCompoundDlg::OnLvnItemchangedConstraintList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED) {
+			constraintSelectionMark = pNMLV->iItem;
+		}
+		else {
+			constraintSelectionMark = -1;
+		}
+	}
+
+	*pResult = 0;
+}
+
+// Keep track of constraint list selection mark for included constraints
+// Selection mark stored as a field because the list control doesn't reset the selection mark when user deselects row
+void CConstraintEditCompoundDlg::OnLvnItemchangedSubconstraintList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & LVIS_SELECTED) {
+			subconstraintSelectionMark = pNMLV->iItem;
+		}
+		else {
+			subconstraintSelectionMark = -1;
+		}
+	}
+
+	*pResult = 0;
+}
+
+
+void CConstraintEditCompoundDlg::OnBnClickedAwardInclude()
+{
+	if (constraintSelectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		if (!Constraint::add_compound(con.get(), m_cnst_id, m_constraint_list.GetItemData(constraintSelectionMark)))
+			AfxMessageBox(_T("Adding this award/constraint will create a circular reference! You cannot perform this action."));
+		else
+			loadConstraintList();
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}
+
+
+void CConstraintEditCompoundDlg::OnBnClickedAwardUninclude()
+{
+	if (subconstraintSelectionMark == -1)
+		return;
+
+	try {
+		sql::Driver* driver = get_driver_instance();
+		std::auto_ptr<sql::Connection> con(driver->connect("localhost", "points", "points"));
+		con->setSchema("points");
+
+		Constraint::remove_compound(con.get(), m_cnst_id, m_subconstraint_list.GetItemData(subconstraintSelectionMark));
+		loadConstraintList();
+	}
+	catch (sql::SQLException& e) {
+		// Exception occured
+		std::string err = "Something went wrong...\nError: " + (std::string)e.what();
+		AfxMessageBox(CString(err.c_str()));
+	}
+}

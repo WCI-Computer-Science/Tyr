@@ -316,13 +316,16 @@ void Constraint::remove_compound(sql::Connection* con, int id, int sub_id) {
 // Each sub-constraint is a node pointing to a super-constraint (this is in reverse to a parent/child relationship in a tree)
 // Graph is loaded as an adjacency list, where each ID (type int) points to vertices (type C)
 // Vertex list is loaded as a vector of C objects
+// Only non-archived awards should be loaded
 void Constraint::load(sql::Connection* con, std::map<int, std::vector<C>>& g, std::vector<C>& v) {
 	std::auto_ptr<sql::Statement> stmt(con->createStatement());
 	std::auto_ptr<sql::ResultSet> res;
 
 	res.reset(stmt->executeQuery(
 		"SELECT c_c.sub_cnst a, super.cnst_id b, super.type b_type, super.is_award b_award FROM compound_cnst c_c "
-		"INNER JOIN cnst super ON super.cnst_id=c_c.super_cnst"
+		"INNER JOIN cnst super ON super.cnst_id=c_c.super_cnst "
+		"LEFT JOIN cnst_archive c_a ON c_a.cnst_id = c_c.sub_cnst OR c_a.cnst_id = c_c.super_cnst "
+		"WHERE c_a.cnst_id IS NULL"
 	));
 
 	while (res->next()) {
@@ -331,7 +334,10 @@ void Constraint::load(sql::Connection* con, std::map<int, std::vector<C>>& g, st
 		g[a].push_back({ b, b_type, b_award });
 	}
 
-	res.reset(stmt->executeQuery("SELECT cnst_id id, type, is_award FROM cnst"));
+	res.reset(stmt->executeQuery(
+		"SELECT c.cnst_id id, c.type type, c.is_award is_award FROM cnst c "
+		"LEFT JOIN cnst_archive c_a ON c_a.cnst_id=c.cnst_id WHERE c_a.cnst_id IS NULL"
+	));
 
 	while (res->next()) {
 		int id = res->getInt("id"), type = res->getInt("type");
@@ -549,19 +555,19 @@ std::auto_ptr<sql::ResultSet> Constraint::get(sql::Connection* con, bool award, 
 			res.reset(stmt->executeQuery(
 				"SELECT c.cnst_id id, c.name name, c.description description, c.type type, c.is_award award "
 				"FROM cnst c LEFT JOIN cnst_archive c_a ON c_a.cnst_id=c.cnst_id "
-				"WHERE c_a.cnst_id IS NULL"
+				"WHERE c_a.cnst_id IS NULL ORDER BY name"
 			));
 		else // See only awards
 			res.reset(stmt->executeQuery(
 				"SELECT c.cnst_id id, c.name name, c.description description, c.type type "
 				"FROM cnst c LEFT JOIN cnst_archive c_a ON c_a.cnst_id=c.cnst_id "
-				"WHERE c_a.cnst_id IS NULL AND c.is_award=true"
+				"WHERE c_a.cnst_id IS NULL AND c.is_award=true ORDER BY name"
 			));
 	}
 	else // See all archived awards (note that non-award constraints are deleted, never archived; everything in the archive is an award)
 		res.reset(stmt->executeQuery(
 			"SELECT c.cnst_id id, c.name name, c.description description, c.type type "
-			"FROM cnst c INNER JOIN cnst_archive c_a ON c_a.cnst_id=c.cnst_id"
+			"FROM cnst c INNER JOIN cnst_archive c_a ON c_a.cnst_id=c.cnst_id ORDER BY name"
 		));
 
 	return res;
@@ -583,7 +589,26 @@ std::auto_ptr<sql::ResultSet> Constraint::get_compound(sql::Connection* con, int
 
 	pstmt.reset(con->prepareStatement(
 		"SELECT c.cnst_id id, c.name name, c.description description, c.type type, c.is_award award "
-		"FROM cnst c INNER JOIN compound_cnst c_c ON c.cnst_id=c_c.sub_cnst AND c_c.super_cnst=?"
+		"FROM cnst c INNER JOIN compound_cnst c_c ON c.cnst_id=c_c.sub_cnst AND c_c.super_cnst=? "
+		"LEFT JOIN cnst_archive c_a ON c_a.cnst_id = c.cnst_id "
+		"WHERE c_a.cnst_id IS NULL"
+	));
+
+	pstmt->setInt(1, id);
+
+	res.reset(pstmt->executeQuery());
+	return res;
+}
+
+std::auto_ptr<sql::ResultSet> Constraint::get_compound_except(sql::Connection* con, int id) {
+	std::auto_ptr<sql::PreparedStatement> pstmt;
+	std::auto_ptr<sql::ResultSet> res;
+
+	pstmt.reset(con->prepareStatement(
+		"SELECT c.cnst_id id, c.name name, c.description description, c.type type, c.is_award award "
+		"FROM cnst c LEFT JOIN compound_cnst c_c ON c.cnst_id=c_c.sub_cnst AND c_c.super_cnst=? "
+		"LEFT JOIN cnst_archive c_a ON c_a.cnst_id = c.cnst_id "
+		"WHERE c_c.sub_cnst IS NULL AND c_a.cnst_id IS NULL"
 	));
 
 	pstmt->setInt(1, id);

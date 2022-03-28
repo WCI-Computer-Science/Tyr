@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by WCIPoints.rc
 //
-#define IDD_STUDENT_MANAGE_LIST         9
 #define IDD_ABOUTBOX                    100
 #define IDR_POPUP_EDIT                  119
 #define ID_STATUSBAR_PANE1              120
@@ -27,6 +26,9 @@
 #define IDD_AWARD_BASIC_EDIT            336
 #define IDD_STUDENT_CREATE              338
 #define IDD_STUDENT_ASSIGN_ACTION       340
+#define IDD_STUDENT_MANAGE_LIST         342
+#define IDD_STUDENT_AWARD_LIST          344
+#define IDD_AWARD_COMPOUND_EDIT         346
 #define IDC_TITLE                       1008
 #define IDC_ACTION_TYPE_STATIC          1010
 #define IDC_ACTION_TYPE_CHANGE          1011
@@ -44,6 +46,7 @@
 #define IDC_CONSTRAINT_TREE             1029
 #define IDC_CONSTRAINT_LIST             1030
 #define IDC_TOGGLE_ONLY_AWARD           1031
+#define IDC_SUBCONSTRAINT_LIST          1031
 #define IDC_CREATE_CONSTRAINT           1032
 #define IDC_CREATE_BASIC_CONSTRAINT     1032
 #define IDC_REMOVE_CONSTRAINT           1033
@@ -67,17 +70,20 @@
 #define IDC_ASSIGN_ACTIONS              1053
 #define IDC_EVALUATE_AWARDS             1054
 #define IDC_HAND_OUT_AWARDS             1055
-#define IDC_STUDENT_OEN                 1055
-#define IDC_SEE_AWARDS                  1056
-#define IDC_STUDENT_LASTNAME            1056
-#define IDC_BUTTON1                     1056
-#define IDC_STUDENT_MANAGE              1056
-#define IDC_SEE_STUDENT_AWARDS          1057
-#define IDC_STUDENT_FIRSTNAME           1057
-#define IDC_STUDENT_PREFNAME            1058
-#define IDC_EDIT_ACTIONS                1058
-#define IDC_STUDENT_STARTYEAR           1059
-#define IDC_STUDENT_GRADYEAR            1060
+#define IDC_STUDENT_OEN                 1056
+#define IDC_SEE_AWARDS                  1057
+#define IDC_STUDENT_LASTNAME            1058
+#define IDC_STUDENT_MANAGE              1059
+#define IDC_SEE_STUDENT_AWARDS          1060
+#define IDC_STUDENT_FIRSTNAME           1061
+#define IDC_STUDENT_PREFNAME            1062
+#define IDC_EDIT_ACTIONS                1063
+#define IDC_STUDENT_STARTYEAR           1064
+#define IDC_STUDENT_GRADYEAR            1065
+#define IDC_STUDENT_AWARD_CHECK         1066
+#define IDC_STUDENT_AWARD_LIST          1067
+#define IDC_AWARD_INCLUDE               1069
+#define IDC_AWARD_UNINCLUDE             1070
 #define ID_STUDENT_ADD                  32771
 #define ID_STUDENT_EDIT                 32772
 #define ID_ACTIONS_AD                   32773
@@ -95,9 +101,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        344
+#define _APS_NEXT_RESOURCE_VALUE        348
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1057
+#define _APS_NEXT_CONTROL_VALUE         1071
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

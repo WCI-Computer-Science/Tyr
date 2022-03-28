@@ -156,14 +156,14 @@ public:
 
 
 
-// See student actions dialog
+// See and manage student actions dialog
 
 class CStudentEditActionsDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CStudentEditActionsDlg)
 
 public:
-	CStudentEditActionsDlg(CString header, CString title, int student_id, CWnd* pParent = nullptr);   // standard constructor
+	CStudentEditActionsDlg(CString header, CString title, int student_id, CWnd* pParent = nullptr);   // no standard constructor needed
 	virtual ~CStudentEditActionsDlg();
 
 	// Dialog Data
@@ -196,4 +196,144 @@ private:
 public:
 	afx_msg void OnBnClickedStudentDeleteAction();
 	afx_msg void OnLvnItemchangedStudentList(NMHDR* pNMHDR, LRESULT* pResult);
+};
+
+
+
+// See and manage student awards dialog
+
+class CStudentEditAwardsDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CStudentEditAwardsDlg)
+
+public:
+	CStudentEditAwardsDlg(CString header, CString title, int student_id, CWnd* pParent = nullptr);   // no standard constructor needed
+	virtual ~CStudentEditAwardsDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_STUDENT_MANAGE_LIST };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CString m_header;
+
+	CString m_title_text;
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_student_id;
+
+	LVCOLUMN m_col_name, m_col_desc, m_col_confirmed;
+	CListCtrl m_award_list;
+	int selectionMark;
+
+	CButton m_toggle_handout_award;
+
+	void loadConstraintList();
+public:
+	afx_msg void OnBnClickedStudentToggleAward();
+	afx_msg void OnLvnItemchangedAwardList(NMHDR* pNMHDR, LRESULT* pResult);
+};
+
+
+
+// Hand out all awards for the year dialog
+
+class CHandOutAwardsDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CHandOutAwardsDlg)
+
+public:
+	CHandOutAwardsDlg(CString header, CString title, int year, CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CHandOutAwardsDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_STUDENT_AWARD_LIST };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CString m_header;
+
+	CString m_title_text;
+	CFont m_titleFont;
+	CStatic m_title;
+
+	int m_year;
+
+	CButton m_see_confirmed;
+
+	LVCOLUMN m_col_stdt_first_name, m_col_stdt_last_name, m_col_award_name, m_col_award_desc, m_col_award_confirmed;
+	CListCtrl m_award_list;
+	std::vector<std::pair<int, int>> m_ids; // Store (stdt_id, cnst_id) for every assigned award
+	int selectionMark;
+
+	CButton m_toggle_handout_award;
+
+	void loadConstraintList();
+public:
+	afx_msg void OnBnClickedSeeUnconfirmed();
+	afx_msg void OnBnClickedStudentToggleAward();
+	afx_msg void OnLvnItemchangedAwardList(NMHDR* pNMHDR, LRESULT* pResult);
+};
+
+
+
+// See and manage all awards (possibly from all years) dialog
+
+class CManageAllAwardsDlg : public CDialogEx
+{
+	DECLARE_DYNAMIC(CManageAllAwardsDlg)
+
+public:
+	CManageAllAwardsDlg(CString header, CString title, int year, CWnd* pParent = nullptr);   // standard constructor
+	virtual ~CManageAllAwardsDlg();
+
+	// Dialog Data
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_STUDENT_AWARD_LIST };
+#endif
+
+protected:
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CString m_header;
+
+	CString m_title_text;
+	CFont m_titleFont;
+	CStatic m_title;
+
+	CButton m_see_all_years;
+
+	int m_year;
+
+	LVCOLUMN m_col_stdt_first_name, m_col_stdt_last_name, m_col_award_name, m_col_award_desc, m_col_grad_year;
+	CListCtrl m_award_list;
+	std::vector<std::pair<int, int>> m_ids; // Store (stdt_id, cnst_id) for every assigned award
+	int selectionMark;
+
+	CButton m_remove_award;
+
+	void loadConstraintList();
+public:
+	afx_msg void OnBnClickedSeeAllYears();
+	afx_msg void OnBnClickedStudentRemoveAward();
+	afx_msg void OnLvnItemchangedAwardList(NMHDR* pNMHDR, LRESULT* pResult);
 };

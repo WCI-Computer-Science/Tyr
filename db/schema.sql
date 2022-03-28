@@ -212,7 +212,9 @@ END;
  */
 CREATE PROCEDURE ACTN_CSTV (IN p_stdt_id MEDIUMINT UNSIGNED, IN p_actn_type TINYINT(1), IN p_actn_id SMALLINT UNSIGNED, OUT result TINYINT UNSIGNED)
 BEGIN
-	SELECT @last_lst := 2, @last_actn_id := 0, @last_yr := 0;
+	SET @last_lst := 2;
+	SET @last_actn_id := 0;
+	SET @last_yr := 0;
 	/*
 	 * a. If only action id is given, count maximum consecutive occurrence of that specific action
 	 * b. If both are given, count maximum consecutive occurrence of any specific action (note: the action id is ignored)
