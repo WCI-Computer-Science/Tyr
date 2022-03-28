@@ -76,6 +76,8 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	cs.style &= (0xFFFFFFFF ^ WS_SIZEBOX);
 	cs.style &= (0xFFFFFFFF ^ WS_MAXIMIZEBOX);
 
+	cs.style &= ~FWS_ADDTOTITLE;
+
 	SetWindowPos(NULL, 0, 0, 590, 350, SWP_NOZORDER | SWP_NOMOVE);
 
 	return TRUE;

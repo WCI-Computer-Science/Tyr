@@ -227,8 +227,8 @@
   <ItemGroup>
     <Image Include="res\Toolbar.bmp" />
     <Image Include="res\Toolbar256.bmp" />
+    <Image Include="res\Tyr.ico" />
     <Image Include="res\userimages.bmp" />
-    <Image Include="res\WCIPoints.ico" />
     <Image Include="res\WCIPointsDoc.ico" />
   </ItemGroup>
   <ItemGroup>
