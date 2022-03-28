@@ -41,9 +41,14 @@ private:
 	CView* SwitchView(int i);
 public:
 	afx_msg void OnFileTest();
+
+	// Switch views
 	afx_msg void OnStudentsManage();
 	afx_msg void OnActionsManage();
 	afx_msg void OnAwardsManage();
+
+	// Override normal menubar functionality
+	afx_msg void OnFileOpen();
 };
 
 extern CWCIPointsApp theApp;

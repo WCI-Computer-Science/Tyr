@@ -20,6 +20,7 @@
 IMPLEMENT_DYNCREATE(CWCIPointsDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CWCIPointsDoc, CDocument)
+	ON_COMMAND(ID_FILE_SAVE, &CWCIPointsDoc::OnFileSave)
 END_MESSAGE_MAP()
 
 
@@ -81,3 +82,6 @@ void CWCIPointsDoc::Dump(CDumpContext& dc) const
 
 // CWCIPointsDoc commands
 
+void CWCIPointsDoc::OnFileSave() {
+	AfxMessageBox(_T("This feature has not been added yet"));
+}

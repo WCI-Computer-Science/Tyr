@@ -24,8 +24,8 @@
 BEGIN_MESSAGE_MAP(CWCIPointsApp, CWinAppEx)
 	ON_COMMAND(ID_APP_ABOUT, &CWCIPointsApp::OnAppAbout)
 	// Standard file based document commands
-	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
-	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
+	ON_COMMAND(ID_FILE_OPEN, &CWCIPointsApp::OnFileOpen)
+	// Change view
 	ON_COMMAND(ID_STUDENTS_MANAGE, &CWCIPointsApp::OnStudentsManage)
 	ON_COMMAND(ID_ACTIONS_MANAGE, &CWCIPointsApp::OnActionsManage)
 	ON_COMMAND(ID_AWARDS_MANAGE, &CWCIPointsApp::OnAwardsManage)
@@ -180,6 +180,55 @@ CView* CWCIPointsApp::SwitchView(int i) {
 
 // CWCIPointsApp message handlers
 
+// CWCIPointsApp customization load/save methods
+
+void CWCIPointsApp::PreLoadState()
+{
+	BOOL bNameValid;
+	CString strName;
+	bNameValid = strName.LoadString(IDS_EDIT_MENU);
+	ASSERT(bNameValid);
+	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
+}
+
+void CWCIPointsApp::LoadCustomState()
+{
+}
+
+void CWCIPointsApp::SaveCustomState()
+{
+}
+
+
+// CWCIPointsApp message handlers
+
+void CWCIPointsApp::OnFileOpen()
+{
+	AfxMessageBox(_T("This feature has not been added yet"));
+}
+
+
+void CWCIPointsApp::OnStudentsManage()
+{
+	SwitchView(0);
+}
+
+
+void CWCIPointsApp::OnActionsManage()
+{
+	SwitchView(1);
+}
+
+
+void CWCIPointsApp::OnAwardsManage()
+{
+	SwitchView(2);
+}
+
+
+
+
+
 
 // CAboutDlg dialog used for App About
 
@@ -213,49 +262,13 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
+
+
+
 // App command to run the dialog
+// Placed after CAboutDlg declaration so that it is declared
 void CWCIPointsApp::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
-}
-
-// CWCIPointsApp customization load/save methods
-
-void CWCIPointsApp::PreLoadState()
-{
-	BOOL bNameValid;
-	CString strName;
-	bNameValid = strName.LoadString(IDS_EDIT_MENU);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
-}
-
-void CWCIPointsApp::LoadCustomState()
-{
-}
-
-void CWCIPointsApp::SaveCustomState()
-{
-}
-
-// CWCIPointsApp message handlers
-
-
-
-void CWCIPointsApp::OnStudentsManage()
-{
-	SwitchView(0);
-}
-
-
-void CWCIPointsApp::OnActionsManage()
-{
-	SwitchView(1);
-}
-
-
-void CWCIPointsApp::OnAwardsManage()
-{
-	SwitchView(2);
 }

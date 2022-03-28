@@ -73,6 +73,9 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
 
+	cs.style &= (0xFFFFFFFF ^ WS_SIZEBOX);
+	cs.style &= (0xFFFFFFFF ^ WS_MAXIMIZEBOX);
+
 	return TRUE;
 }
 
