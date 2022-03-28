@@ -143,6 +143,9 @@ void CActionView::OnInitialUpdate()
 
 	GetParentFrame()->RecalcLayout();
 	ResizeParentToFit();
+
+	// Remove scrollbars
+	SetScrollSizes(MM_TEXT, CSize(0, 0));
 }
 
 void CActionView::OnRButtonUp(UINT /* nFlags */, CPoint point)
@@ -153,7 +156,7 @@ void CActionView::OnRButtonUp(UINT /* nFlags */, CPoint point)
 
 void CActionView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 {
-	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
+	// Right click should not do anything
 }
 
 

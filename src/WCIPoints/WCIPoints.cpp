@@ -188,7 +188,8 @@ void CWCIPointsApp::PreLoadState()
 	CString strName;
 	bNameValid = strName.LoadString(IDS_EDIT_MENU);
 	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
+	// No context menu needed
+	//GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
 }
 
 void CWCIPointsApp::LoadCustomState()
