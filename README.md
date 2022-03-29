@@ -1,4 +1,4 @@
-# Tyr
+# ![icon](https://raw.githubusercontent.com/WCI-Computer-Science/Tyr/main/src/WCIPoints/res/Tyr.ico) Tyr
 A Windows MFC application for handing out awards at WCI. Successor to the _Heimdall_ program.
 Students get points based on the sports, academic achievements, and activities that they participate in. Awards are assigned based on those points.
 
